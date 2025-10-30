@@ -1,0 +1,21 @@
+# Ignore environment & secrets
+.env
+
+# Ignore compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore Docker volumes & build files
+*.log
+docker/airflow/logs/
+data/
+postgres-data/
+kafka-data/
+
+# VSCode configs
+.vscode/
+
+# Ignore OS cache
+.DS_Store
+Thumbs.db
