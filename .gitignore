@@ -19,3 +19,5 @@ kafka-data/
 # Ignore OS cache
 .DS_Store
 Thumbs.db
+
+!data/uscities.csv
