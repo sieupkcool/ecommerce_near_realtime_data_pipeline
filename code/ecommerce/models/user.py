@@ -42,9 +42,9 @@ class User(object):
         try:
             query = """
                 SELECT 1
-                FROM users u
-                JOIN role_user ru ON ru.user_id = u.id
-                JOIN roles r ON r.id = ru.role_id
+                FROM addresses a
+                JOIN role_user ru ON a.user_id = ru.user_id
+                JOIN roles r ON ru.role_id = r.id
                 WHERE r.role_name = 'customer'
                 LIMIT 1
             """
