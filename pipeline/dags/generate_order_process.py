@@ -4,10 +4,21 @@ from airflow import AirflowException
 
 from ecommerce.models.order import OrderRegistration
 from ecommerce.models.transaction import Transaction
+from ecommerce.models.user import User
 
 from airflow.decorators import dag, task
 
-from airflow.sensors.external_task import ExternalTaskSensor
+from airflow.sensors.python import PythonSensor
+
+def check_customer_user_exists():
+    user_instance = User()
+    exists = user_instance.has_customer_user()
+    if exists:
+        print("Found customer user. Proceeding...")
+        return True
+    else:
+        print("Waiting for a 'customer' user to be created...")
+        return False
 
 @dag(
     dag_id='ecommerce_generate_order_process',
@@ -17,17 +28,12 @@ from airflow.sensors.external_task import ExternalTaskSensor
 )
 def order_process():
 
-    wait_for_user_registration = ExternalTaskSensor(
-        task_id='wait_for_user_registration',
-        # Tên DAG mà nó cần đợi
-        external_dag_id='ecommerce_user_registration', 
-        # Tên task trong DAG đó mà nó cần đợi
-        external_task_id='generate_user_address',
-        mode='poke',
+    wait_for_customer = PythonSensor(
+        task_id="wait_for_customer_user",
+        python_callable=check_customer_user_exists,
         poke_interval=15,
-        timeout=300,
-        # Đảm bảo nó đợi lần chạy gần nhất
-        execution_delta=timedelta(minutes=1) 
+        timeout=600,
+        mode="poke"
     )
 
     @task(retries=5, retry_delay=timedelta(minutes=5))
@@ -45,7 +51,9 @@ def order_process():
         transaction = Transaction()
         transaction.generate_transaction(order_id)
 
-    wait_for_user_registration >> generate_transaction_for_order(generate_order_process())
+    order_id = generate_order_process()
+    wait_for_customer >> order_id
+    generate_transaction_for_order(order_id)
 
 
 order_process()

@@ -33,7 +33,27 @@ class User(object):
         except psycopg2.Error as e:
             self.conn.rollback()
             print(f"Error while generating users: {e}")
-
+    
+    def has_customer_user(self):
+        """
+        Kiểm tra xem đã có ít nhất 1 user có role 'customer' chưa.
+        Trả về True nếu có, False nếu chưa có.
+        """
+        try:
+            query = """
+                SELECT 1
+                FROM users u
+                JOIN role_user ru ON ru.user_id = u.id
+                JOIN roles r ON r.id = ru.role_id
+                WHERE r.role_name = 'customer'
+                LIMIT 1
+            """
+            self.cur.execute(query)
+            result = self.cur.fetchone()
+            return result is not None
+        except psycopg2.Error as e:
+            print(f"Error while checking customer users: {e}")
+            return False
 
 def main():
     user_model_generator = User()
