@@ -23,12 +23,9 @@
 
     "time.precision.mode": "connect",
 
-    "transforms": "flatten,convertTimestamp",
-    "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
-    "transforms.flatten.delimiter": ".",
-    "transforms.convertTimestamp.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-    "transforms.convertTimestamp.field": "created_at, shipped_at",
-    "transforms.convertTimestamp.target.type": "Timestamp",
-    "transforms.convertTimestamp.format": "yyyy-MM-dd HH:mm:ss"
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": "false",
+    "transforms.unwrap.delete.handling.mode": "none"
   }
 }
