@@ -39,21 +39,25 @@ def order_process():
     @task(retries=5, retry_delay=timedelta(minutes=5))
     def generate_order_process():
         order = OrderRegistration()
-        order_id = order.save_order()
-        print(order_id)
-        if order_id:
-            return order_id
-
-        raise AirflowException('Order not found...')
+        order_ids_list = order.generate_bulk_orders(1000) # <-- TẠO 1000 ĐƠN
+        
+        print(f"Đã tạo {len(order_ids_list)} ID đơn hàng.")
+        
+        # Kiểm tra xem list có rỗng không
+        if not order_ids_list:
+            raise AirflowException('Không tạo được đơn hàng nào...')
+            
+        # Trả về DANH SÁCH ID
+        return order_ids_list
 
     @task(retries=5, retry_delay=timedelta(minutes=5))
-    def generate_transaction_for_order(order_id):
+    def generate_transaction_for_order(order_ids):
         transaction = Transaction()
-        transaction.generate_transaction(order_id)
+        transaction.generate_bulk_transactions(order_ids)
 
-    order_id = generate_order_process()
-    wait_for_customer >> order_id
-    generate_transaction_for_order(order_id)
+    order_ids_result = generate_order_process()
+    wait_for_customer >> order_ids_result
+    generate_transaction_for_order(order_ids_result)
 
 
 order_process()

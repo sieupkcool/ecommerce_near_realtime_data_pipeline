@@ -46,7 +46,7 @@ with DAG('ecommerce_user_registration',
     generate_user_info = PythonOperator(
         task_id='generate_user_info',
         python_callable=user_info,
-        op_args=[2]
+        op_args=[100] # <-- TEST (từ 2 lên 100)
     )
 
     assign_role_to_user = PythonOperator(

@@ -164,6 +164,131 @@ class OrderRegistration(object):
         else:
             return None
 
+    def generate_bulk_orders(self, num_orders):
+        print(f"Bắt đầu tạo {num_orders} đơn hàng...")
+        
+        # 1. PRE-FETCHING (Lấy dữ liệu 1 lần)
+        
+        # Lấy (customer_id, address_id) của tất cả customer HỢP LỆ
+        self.cur.execute("""
+            SELECT u.id, a.id 
+            FROM users u
+            JOIN addresses a ON u.id = a.user_id
+            JOIN role_user ru ON u.id = ru.user_id
+            JOIN roles r ON ru.role_id = r.id
+            WHERE r.role_name = 'customer'
+        """)
+        valid_customers = self.cur.fetchall()
+        if not valid_customers:
+            print("Không tìm thấy customer hợp lệ, không thể tạo đơn hàng.")
+            return
+
+        # Lấy tất cả staff
+        self.cur.execute("""
+            SELECT u.id FROM users u
+            JOIN role_user ru ON u.id = ru.user_id
+            JOIN roles r ON ru.role_id = r.id
+            WHERE r.role_name = 'staff'
+        """)
+        valid_staffs = [row[0] for row in self.cur.fetchall()]
+
+        # Lấy tất cả sản phẩm (id, giá, thuế)
+        self.cur.execute("SELECT id, product_price, product_tax FROM products WHERE product_quantity > 0")
+        valid_products = self.cur.fetchall()
+
+        # Lấy các phương thức
+        self.cur.execute("SELECT id FROM paymentmethods")
+        payment_methods = [row[0] for row in self.cur.fetchall()]
+        
+        self.cur.execute("SELECT id FROM shippingmethods")
+        shipping_methods = [row[0] for row in self.cur.fetchall()]
+        
+        self.cur.execute("SELECT id FROM orderstatus WHERE order_status_name='Pending'")
+        pending_status_id = self.cur.fetchone()[0]
+
+        
+        # 2. VÒNG LẶP TRONG BỘ NHỚ (Rất nhanh)
+        
+        orders_data_list = []
+        order_details_data_list = []
+        
+        for _ in range(num_orders):
+            # Lấy ngẫu nhiên từ dữ liệu đã pre-fetch
+            customer_id, address_id = random.choice(valid_customers)
+            staff_id = random.choice(valid_staffs)
+            payment_id = random.choice(payment_methods)
+            shipping_id = random.choice(shipping_methods)
+            
+            # Chọn sản phẩm cho đơn hàng này
+            num_products_in_order = random.randint(1, 5)
+            products_for_this_order = random.sample(valid_products, num_products_in_order)
+            
+            # Tính toán tổng tiền (logic này có thể phức tạp hơn)
+            order_amount = sum(p[1] for p in products_for_this_order)
+            tax_amount = sum(p[1] * (p[2] / Decimal('100')) for p in products_for_this_order)
+            total_amount = order_amount + tax_amount
+            
+            # ... (Xử lý discount) ...
+            discount_amount = 0 # Giả sử
+            
+            # Lưu dữ liệu đơn hàng
+            order_tuple = (
+                customer_id, staff_id, address_id, order_amount, discount_amount, tax_amount,
+                total_amount, None, payment_id, None, pending_status_id, shipping_id, None
+            )
+            orders_data_list.append(order_tuple)
+            
+            # Lưu chi tiết đơn hàng (cần ID đơn hàng, sẽ xử lý sau)
+            # Tạm thời, chúng ta sẽ lưu sản phẩm cùng index
+            order_details_data_list.append((len(orders_data_list) - 1, products_for_this_order))
+
+            
+        # 3. BULK INSERT (Chèn hàng loạt)
+        
+        try:
+            self.cur.execute("BEGIN;")
+
+            # Chèn 1000 đơn hàng
+            insert_order_query = """
+                INSERT INTO orders (user_id, staff_id, address_id, order_amount, discount_amount, tax_amount,
+                                    total_amount, discount_id, payment_method_id, payment_status_id, order_status_id,
+                                    shipping_method_id, shipping_status_id)
+                VALUES %s RETURNING id
+            """
+            # Chèn và lấy lại 1000 ID đơn hàng đã tạo
+            inserted_order_ids = execute_values(self.cur, insert_order_query, orders_data_list, fetch=True)
+            
+            # Chuẩn bị dữ liệu chi tiết đơn hàng
+            final_order_details = []
+            for idx, (order_index, products) in enumerate(order_details_data_list):
+                order_id = inserted_order_ids[order_index][0]
+                for prod in products:
+                    prod_id, prod_price, prod_tax = prod
+                    quantity = random.randint(1, 3)
+                    subtotal = prod_price * quantity
+                    unit_cost = prod_price * Decimal('0.8') # Giả sử
+                    
+                    final_order_details.append((
+                        order_id, prod_id, quantity, prod_price, prod_tax, subtotal, unit_cost
+                    ))
+
+            # Chèn 1000+ chi tiết đơn hàng
+            insert_details_query = """
+                INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount, unit_cost)
+                VALUES %s
+            """
+            execute_values(self.cur, insert_details_query, final_order_details)
+
+            self.conn.commit()
+            print(f"Đã chèn thành công {len(inserted_order_ids)} đơn hàng và {len(final_order_details)} chi tiết đơn hàng.")
+            
+            # Trả về danh sách ID cho task transaction
+            return [row[0] for row in inserted_order_ids]
+
+        except Exception as e:
+            self.conn.rollback()
+            print(f"Lỗi khi chèn hàng loạt: {e}")
+            return []
 
 def main():
     order_registration_model = OrderRegistration()
