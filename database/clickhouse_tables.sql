@@ -1,5 +1,5 @@
 -- Transactions Table and Materialized View ------------------------------
-USE default;
+
 CREATE TABLE IF NOT EXISTS transactions
 (
     order_id UInt32,
@@ -49,7 +49,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_transactions TO transactions
     trim(lower(COALESCE(status, 'không rõ'))) AS status,
     
     -- Debezium gửi Int64 (microseconds), phải chia 1000
-    toDateTime64OrNull(created_at / 1000, 3) AS created_at,
+    COALESCE(fromUnixTimestamp64Milli(intDiv(created_at, 1000)), now()) AS created_at,
     now() as ttl
 FROM _kafka_transactions
 WHERE order_id IS NOT NULL; -- Lọc message rác
@@ -77,7 +77,8 @@ CREATE TABLE IF NOT EXISTS orders
 ENGINE = ReplacingMergeTree(id) -- Dùng ID làm khóa
 PARTITION BY toYYYYMMDD(created_at)
 ORDER BY (id)
-TTL ttl + INTERVAL 7 DAY;
+TTL ttl + INTERVAL 7 DAY
+SETTINGS allow_nullable_key = 1;
 
 CREATE TABLE IF NOT EXISTS _kafka_orders
 (
@@ -138,7 +139,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orders TO orders
     COALESCE(order_status_id, 0) AS order_status_id, -- Gán 0 nếu status là null
     shipping_method_id,
     shipping_status_id,
-    toDateTime64OrNull(created_at / 1000, 3) AS created_at
+    fromUnixTimestamp64Milli(intDiv(created_at, 1000)) AS created_at
 FROM _kafka_orders
 WHERE id IS NOT NULL;
 
@@ -295,7 +296,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_users TO users
 ) AS SELECT
     id,
     trim(COALESCE(username, 'người dùng ẩn')) AS username,
-    toDateTime64OrNull(created_at / 1000, 3) AS created_at,
+    fromUnixTimestamp64Milli(intDiv(created_at, 1000)) AS created_at,
     now() as ttl
 FROM _kafka_users
 WHERE id IS NOT NULL;
@@ -543,7 +544,7 @@ CREATE TABLE IF NOT EXISTS product_tag
     product_id UInt32,
     tag_id UInt32
 ) 
-ENGINE = ReplacingMergeTree -- Không cần key, tự động xóa theo Primary Key
+ENGINE = ReplacingMergeTree() -- Không cần key, tự động xóa theo Primary Key
 ORDER BY (product_id, tag_id); -- Khóa chính là (product_id, tag_id)
 
 CREATE TABLE IF NOT EXISTS _kafka_product_tag
@@ -653,8 +654,8 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_discounts TO discounts
     trim(lower(COALESCE(type, 'không rõ'))) AS type,
     trim(COALESCE(value, '0')) AS value,
     trim(upper(COALESCE(code, 'NOCODE'))) AS code,
-    toDateTime64OrNull(started_at / 1000, 3) AS started_at,
-    toDateTime64OrNull(expired_at / 1000, 3) AS expired_at
+    fromUnixTimestamp64Milli(intDiv(started_at, 1000)) AS started_at,
+    fromUnixTimestamp64Milli(intDiv(expired_at, 1000)) AS expired_at
 FROM _kafka_discounts
 WHERE id IS NOT NULL;
 

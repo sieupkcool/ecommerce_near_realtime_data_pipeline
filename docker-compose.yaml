@@ -274,10 +274,40 @@ services:
     networks:
       - services
 
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8.8.17
+    container_name: clickhouse
+    hostname: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    env_file:
+      - .env
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse/
+      - ./database/clickhouse_tables.sql:/docker-entrypoint-initdb.d/clickhouse_tables.sql
+    networks:
+      - services
+    depends_on:
+      kafka-broker:
+        condition: service_healthy
+      debezium:
+        condition: service_healthy
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   airflow-postgres-volume:
   postgres-main-volume:
-  kafka-volume: # Thêm volume cho Kafka
+  kafka-volume:
+  clickhouse-data:
 
 networks:
   services:
