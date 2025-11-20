@@ -1,6 +1,6 @@
 import psycopg2
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from psycopg2.extras import execute_values
 from decimal import Decimal
 from ecommerce.config.database import db_config
@@ -164,8 +164,13 @@ class OrderRegistration(object):
         else:
             return None
 
-    def generate_bulk_orders(self, num_orders):
-        print(f"Bắt đầu tạo {num_orders} đơn hàng...")
+    def generate_bulk_orders(self, num_orders, execution_date_str=None):
+        print(f"Bắt đầu tạo {num_orders} đơn hàng cho ngày {execution_date_str}...")
+
+        if execution_date_str:
+            base_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
+        else:
+            base_date = datetime.now()
         
         # 1. PRE-FETCHING (Lấy dữ liệu 1 lần)
         
@@ -197,17 +202,37 @@ class OrderRegistration(object):
         valid_products = self.cur.fetchall()
 
         # Lấy các phương thức
-        self.cur.execute("SELECT id FROM paymentmethods")
-        payment_methods = [row[0] for row in self.cur.fetchall()]
+        self.cur.execute("SELECT id, payment_method_name FROM paymentmethods")
+        payment_methods_data = self.cur.fetchall()
         
+        # Tách ID và tên để tạo trọng số
+        payment_ids = [row[0] for row in payment_methods_data]
+        payment_names = [row[1] for row in payment_methods_data]
+
+        # TẠO TRỌNG SỐ
+        # 50% COD, 30% Credit Card, 15% Bank Transfer, 5% PayPal
+        weights_payment = [0.30, 0.05, 0.05, 0.10, 0.50] 
+        
+        # Lấy các phương thức vận chuyển
         self.cur.execute("SELECT id FROM shippingmethods")
         shipping_methods = [row[0] for row in self.cur.fetchall()]
         
+        # Lấy các trạng thái mặc định
         self.cur.execute("SELECT id FROM orderstatus WHERE order_status_name='Pending'")
         pending_status_id = self.cur.fetchone()[0]
 
+        self.cur.execute("SELECT id FROM paymentstatus WHERE payment_status_name='Pending'")
+        default_payment_status_id = self.cur.fetchone()[0]
         
-        # 2. VÒNG LẶP TRONG BỘ NHỚ (Rất nhanh)
+        self.cur.execute("SELECT id FROM shippingstatus WHERE shipping_status_name='Pending'")
+        default_shipping_status_id = self.cur.fetchone()[0]
+
+        # Lấy tất cả mã giảm giá còn hạn
+        self.cur.execute("SELECT id, type, value FROM discounts WHERE expired_at > %s", (datetime.now(),))
+        valid_discounts = self.cur.fetchall()
+
+        
+        # 2. VÒNG LẶP TRONG BỘ NHỚ 
         
         orders_data_list = []
         order_details_data_list = []
@@ -216,7 +241,7 @@ class OrderRegistration(object):
             # Lấy ngẫu nhiên từ dữ liệu đã pre-fetch
             customer_id, address_id = random.choice(valid_customers)
             staff_id = random.choice(valid_staffs)
-            payment_id = random.choice(payment_methods)
+            payment_id = random.choices(payment_ids, weights=weights_payment, k=1)[0]
             shipping_id = random.choice(shipping_methods)
             
             # Chọn sản phẩm cho đơn hàng này
@@ -226,20 +251,50 @@ class OrderRegistration(object):
             # Tính toán tổng tiền (logic này có thể phức tạp hơn)
             order_amount = sum(p[1] for p in products_for_this_order)
             tax_amount = sum(p[1] * (p[2] / Decimal('100')) for p in products_for_this_order)
-            total_amount = order_amount + tax_amount
             
             # ... (Xử lý discount) ...
-            discount_amount = 0 # Giả sử
+            discount_id = None
+            discount_amount = Decimal('0')
+
+            # Áp dụng logic 30% đơn hàng có discount
+            if random.randint(0, 10) > 7 and valid_discounts: # Chỉ chạy nếu có mã giảm giá
+                order_discount = random.choice(valid_discounts)
+                discount_id = order_discount[0]
+                discount_type = order_discount[1]
+                discount_value = order_discount[2]
+                
+                if discount_type == 'percent':
+                    discount_amount = order_amount * (discount_value / Decimal('100'))
+                else:
+                    # Đảm bảo không giảm giá nhiều hơn số tiền
+                    discount_amount = min(order_amount, discount_value)
+            
+            total_amount = (order_amount + tax_amount) - discount_amount
+
+            # --- LOGIC MỚI: RẢI GIỜ ---
+            if execution_date_str:
+                # Để đơn hàng rải đều từ 00:00:00 đến 23:59:59 của ngày đó
+                random_seconds = random.randint(0, 86399)
+                created_at = base_date + timedelta(seconds=random_seconds)
+            else:
+                # Nếu chạy thật: Dùng thời gian thực
+                created_at = datetime.now()
             
             # Lưu dữ liệu đơn hàng
             order_tuple = (
                 customer_id, staff_id, address_id, order_amount, discount_amount, tax_amount,
-                total_amount, None, payment_id, None, pending_status_id, shipping_id, None
+                total_amount, 
+                discount_id, 
+                payment_id, 
+                default_payment_status_id, 
+                pending_status_id, 
+                shipping_id, 
+                default_shipping_status_id,
+                created_at
             )
             orders_data_list.append(order_tuple)
             
             # Lưu chi tiết đơn hàng (cần ID đơn hàng, sẽ xử lý sau)
-            # Tạm thời, chúng ta sẽ lưu sản phẩm cùng index
             order_details_data_list.append((len(orders_data_list) - 1, products_for_this_order))
 
             
@@ -252,7 +307,7 @@ class OrderRegistration(object):
             insert_order_query = """
                 INSERT INTO orders (user_id, staff_id, address_id, order_amount, discount_amount, tax_amount,
                                     total_amount, discount_id, payment_method_id, payment_status_id, order_status_id,
-                                    shipping_method_id, shipping_status_id)
+                                    shipping_method_id, shipping_status_id, created_at)
                 VALUES %s RETURNING id
             """
             # Chèn và lấy lại 1000 ID đơn hàng đã tạo
@@ -269,12 +324,12 @@ class OrderRegistration(object):
                     unit_cost = prod_price * Decimal('0.8') # Giả sử
                     
                     final_order_details.append((
-                        order_id, prod_id, quantity, prod_price, prod_tax, subtotal, unit_cost
+                        order_id, prod_id, quantity, prod_price, prod_tax, subtotal, unit_cost, created_at
                     ))
 
             # Chèn 1000+ chi tiết đơn hàng
             insert_details_query = """
-                INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount, unit_cost)
+                INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount, unit_cost, created_at)
                 VALUES %s
             """
             execute_values(self.cur, insert_details_query, final_order_details)

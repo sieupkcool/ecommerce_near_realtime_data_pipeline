@@ -28,10 +28,10 @@ default_args = {
 }
 
 with DAG('ecommerce_generate_product',
-        start_date=datetime(2025, 8, 30),
+        start_date=datetime(2025, 10, 30),
         # THAY THẾ LỊCH CHẠY BẰNG CÁC DATASET
         schedule=[BRAND_DATASET, CATEGORY_DATASET],
-         default_args=default_args, catchup=False) as dag:
+         default_args=default_args, catchup=True) as dag:
 
     generate_product = PythonOperator(
         task_id='generate_product',

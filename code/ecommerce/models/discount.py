@@ -19,8 +19,14 @@ class Discount:
         self.cur.execute("SELECT id FROM adscampaigns")
         return [row[0] for row in self.cur.fetchall()]
 
-    def generate_discounts(self, num_discounts):
+    def generate_discounts(self, num_discounts, execution_date_str=None):
         try:
+            # LOGIC XỬ LÝ NGÀY
+            if execution_date_str:
+                run_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
+            else:
+                run_date = datetime.now()
+
             campaign_ids = self.fetch_campaign_ids()
 
             discount_data = []
@@ -36,7 +42,7 @@ class Discount:
                 else:
                     value = round(random.uniform(1, 1000), 2)  # Random value for amount type
 
-                started_at = datetime.now() - timedelta(days=random.randint(1, 30))
+                started_at = run_date - timedelta(days=random.randint(1, 30))
                 expired_at = started_at + timedelta(days=random.randint(1, 30))
 
                 # Generate a unique code for each discount (10 characters)

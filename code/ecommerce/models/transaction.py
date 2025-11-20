@@ -108,9 +108,15 @@ class Transaction(object):
             
             # Quyết định trạng thái đơn hàng mới
             if is_success:
-                new_order_status = random.choice(['Processing', 'Shipped', 'Delivered'])
+                # Mô phỏng: 70% đã giao, 20% đang ship, 10% đang xử lý
+                statuses_success = ['Processing', 'Shipped', 'Delivered']
+                weights_success = [0.10, 0.20, 0.70]
+                new_order_status = random.choices(statuses_success, weights=weights_success, k=1)[0]
             else:
-                new_order_status = random.choice(['Pending', 'Cancelled'])
+                # Mô phỏng: 80% bị hủy, 20% đang pending
+                statuses_fail = ['Pending', 'Cancelled']
+                weights_fail = [0.20, 0.80]
+                new_order_status = random.choices(statuses_fail, weights=weights_fail, k=1)[0]
             
             # Thêm vào list để cập nhật
             statuses_to_update.append((order_id, new_order_status))

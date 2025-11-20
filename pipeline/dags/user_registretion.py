@@ -1,15 +1,27 @@
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.sensors.python import PythonSensor
 
 from ecommerce.models.user import User
 from ecommerce.models.role_user import RoleUser
 from ecommerce.models.address import Address
+from ecommerce.models.city import City
 
 
-def user_info(num_users=1):
+def check_cities_exist_callable():
+    city_instance = City()
+    exists = city_instance.has_cities()
+    if exists:
+        print("Cities found. Proceeding...")
+        return True
+    else:
+        print("Waiting for cities to be created...")
+        return False
+
+def user_info(num_users=1, execution_date_str=None):
     instance = User()
-    instance.generate_fake_users(num_users=num_users)
+    instance.generate_fake_users(num_users=num_users, execution_date_str=execution_date_str)
 
 
 def user_address():
@@ -34,19 +46,30 @@ default_args = {
 }
 
 with DAG('ecommerce_user_registration',
-        start_date=datetime(2025, 9, 30),
-        schedule='* * * * *',
-         default_args=default_args, catchup=False) as dag:
+        start_date=datetime(2025, 10, 30),
+        schedule='@daily',
+        default_args=default_args, 
+        catchup=True,
+        max_active_runs=1
+) as dag:
 
     # insert_role_to_db = PythonOperator(
     #     task_id='insert_role_to_db',
     #     python_callable=insert_role
     # )
 
+    wait_for_cities = PythonSensor(
+        task_id="wait_for_cities",
+        python_callable=check_cities_exist_callable,
+        poke_interval=30, 
+        timeout=900,      
+        mode="poke"
+    )
+
     generate_user_info = PythonOperator(
         task_id='generate_user_info',
         python_callable=user_info,
-        op_args=[100] # <-- TEST (từ 2 lên 100)
+        op_args=[100, '{{ ds }}'] # <-- TEST (từ 2 lên 100)
     )
 
     assign_role_to_user = PythonOperator(
@@ -61,4 +84,4 @@ with DAG('ecommerce_user_registration',
 
 # insert_role_to_db >> generate_user_info >> assign_role_to_user >> generate_user_address
 
-generate_user_info >> assign_role_to_user >> generate_user_address
+wait_for_cities >> generate_user_info >> assign_role_to_user >> generate_user_address

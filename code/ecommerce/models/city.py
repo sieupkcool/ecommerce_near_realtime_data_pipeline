@@ -14,6 +14,21 @@ class City:
         self.cur.close()
         self.conn.close()
 
+    def has_cities(self):
+        """
+        Kiểm tra xem bảng 'cities' đã có dữ liệu hay chưa.
+        Trả về True nếu có, False nếu chưa có.
+        """
+        try:
+            self.cur.execute("SELECT 1 FROM cities LIMIT 1")
+            exists = self.cur.fetchone() is not None
+            return exists
+        except psycopg2.Error as e:
+            print(f"Error checking cities: {e}")
+            # Nếu bảng không tồn tại hoặc có lỗi, coi như chưa có
+            self.conn.rollback() 
+            return False
+
     def generate_cities_for_provinces(self):
         """
         Đọc file CSV và bảng 'provinces', hợp nhất (merge) chúng

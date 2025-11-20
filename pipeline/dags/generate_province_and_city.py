@@ -24,9 +24,9 @@ default_args = {
 
 
 with DAG('ecommerce_generate_province_and_city',
-         start_date=datetime(2025, 9, 30),
+         start_date=datetime(2025, 10, 30),
          schedule="@once",
-         default_args=default_args, catchup=False) as dag:
+         default_args=default_args, catchup=True) as dag:
 
     generate_provinces_info = PythonOperator(
         task_id='generate_provinces_info',

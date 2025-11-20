@@ -21,9 +21,9 @@ default_args = {
 
 with DAG(
     'ecommerce_generate_category',
-    start_date=datetime(2025, 8, 30),
+    start_date=datetime(2025, 10, 30),
     schedule='@weekly',
-    default_args=default_args, catchup=False
+    default_args=default_args, catchup=True
 ) as dag:
 
     generate_category = PythonOperator(

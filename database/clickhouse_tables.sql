@@ -1,4 +1,5 @@
 -- Transactions Table and Materialized View ------------------------------
+USE ecommerce_mart;
 
 CREATE TABLE IF NOT EXISTS transactions
 (
@@ -96,7 +97,9 @@ CREATE TABLE IF NOT EXISTS _kafka_orders
     order_status_id Nullable(UInt32),
     shipping_method_id Nullable(UInt32),
     shipping_status_id Nullable(UInt32),
-    created_at Nullable(Int64)
+    shipped_at Nullable(Int64),
+    created_at Nullable(Int64),
+    updated_at Nullable(Int64)
 )
 ENGINE Kafka
 SETTINGS
@@ -129,10 +132,10 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orders TO orders
     user_id,
     staff_id,
     address_id,
-    toDecimal64OrNull(order_amount, 2),
-    toDecimal64OrNull(discount_amount, 2),
-    toDecimal64OrNull(tax_amount, 2),
-    toDecimal64OrNull(total_amount, 2),
+    toDecimal64OrNull(order_amount, 2) AS order_amount,
+    toDecimal64OrNull(discount_amount, 2) AS discount_amount,
+    toDecimal64OrNull(tax_amount, 2) AS tax_amount,
+    toDecimal64OrNull(total_amount, 2) AS total_amount,
     discount_id,
     payment_method_id,
     payment_status_id,
@@ -856,7 +859,8 @@ CREATE TABLE IF NOT EXISTS _kafka_orderdetails
     product_price Nullable(String),
     product_tax Nullable(String),
     subtotal_amount Nullable(String),
-    unit_cost Nullable(String) -- THÊM CỘT unit_cost CHO DASHBOARD
+    unit_cost Nullable(String), -- THÊM CỘT unit_cost CHO DASHBOARD
+    created_at Nullable(Int64)
 )
 ENGINE Kafka
 SETTINGS
@@ -884,11 +888,11 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orderdetails TO orderdetails
     order_id,
     product_id,
     quantity,
-    toDecimal64OrNull(product_price, 2),
-    toDecimal64OrNull(product_tax, 2),
-    toDecimal64OrNull(subtotal_amount, 2),
-    toDecimal64OrNull(unit_cost, 2), 
-    now() AS created_at 
+    toDecimal64OrNull(product_price, 2) AS product_price,
+    toDecimal64OrNull(product_tax, 2) AS product_tax,
+    toDecimal64OrNull(subtotal_amount, 2) AS subtotal_amount,
+    toDecimal64OrNull(unit_cost, 2) AS unit_cost,
+    fromUnixTimestamp64Milli(intDiv(created_at, 1000)) AS created_at 
 FROM _kafka_orderdetails
 -- Lọc dữ liệu rác
 WHERE

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import random
 
 from airflow import AirflowException
 
@@ -22,9 +23,10 @@ def check_customer_user_exists():
 
 @dag(
     dag_id='ecommerce_generate_order_process',
-    start_date=datetime(2025, 9, 30),
-    schedule=timedelta(minutes=1),
-    catchup=False,
+    start_date=datetime(2025, 10, 30),
+    schedule='@daily',
+    catchup=True,
+    max_active_runs=1
 )
 def order_process():
 
@@ -37,17 +39,27 @@ def order_process():
     )
 
     @task(retries=5, retry_delay=timedelta(minutes=5))
-    def generate_order_process():
+    def generate_order_process(execution_date_str: str):
+
+        run_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
+        
+        # 0 = Thứ 2, 1 = T3, ..., 5 = T7, 6 = CN
+        day_of_week = run_date.weekday()
+
+        # Tạo mô hình: Cuối tuần bận rộn
+        if day_of_week >= 5: 
+            base_orders = random.randint(2000, 3000) # Nhiều đơn hơn
+        else:
+            base_orders = random.randint(800, 1200) # Ít đơn hơn
+
         order = OrderRegistration()
-        order_ids_list = order.generate_bulk_orders(1000) # <-- TẠO 1000 ĐƠN
+        order_ids_list = order.generate_bulk_orders(base_orders, execution_date_str)
         
-        print(f"Đã tạo {len(order_ids_list)} ID đơn hàng.")
+        print(f"Ngày {execution_date_str} (Thứ {day_of_week+2}), tạo {len(order_ids_list)} ID đơn hàng.")
         
-        # Kiểm tra xem list có rỗng không
         if not order_ids_list:
             raise AirflowException('Không tạo được đơn hàng nào...')
             
-        # Trả về DANH SÁCH ID
         return order_ids_list
 
     @task(retries=5, retry_delay=timedelta(minutes=5))
@@ -55,7 +67,7 @@ def order_process():
         transaction = Transaction()
         transaction.generate_bulk_transactions(order_ids)
 
-    order_ids_result = generate_order_process()
+    order_ids_result = generate_order_process('{{ ds }}')
     wait_for_customer >> order_ids_result
     generate_transaction_for_order(order_ids_result)
 

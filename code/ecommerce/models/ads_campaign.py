@@ -14,12 +14,19 @@ class AdsCampaigns:
         self.cur.close()
         self.conn.close()
 
-    def generate_ad_campaigns(self, num_campaigns):
+    def generate_ad_campaigns(self, num_campaigns, execution_date_str=None):
         try:
             ad_campaign_data = []
+
+            # LOGIC XỬ LÝ NGÀY
+            if execution_date_str:
+                run_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
+            else:
+                run_date = datetime.now()
+
             for _ in range(num_campaigns):
                 # Generate random start date within the past month
-                start_date = datetime.now() - timedelta(days=random.randint(1, 30))
+                start_date = run_date - timedelta(days=random.randint(1, 30))
 
                 # Generate end date within a maximum duration of 10 days from start date
                 end_date = start_date + timedelta(days=random.randint(1, 10))

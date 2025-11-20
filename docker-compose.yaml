@@ -140,13 +140,14 @@ services:
     ports:
       - "65432:5432"
     environment:
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
       POSTGRES_USER: ${APP_DB_USER}
       POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
       POSTGRES_DB: ${APP_DB_NAME}
     volumes:
       - postgres-main-volume:/var/lib/postgresql/data
       - ./database/postgres_tables.sql:/docker-entrypoint-initdb.d/postgres_tables.sql
-    command: ["postgres", "-c", "wal_level=logical"]
+    command: ["postgres", "-c", "wal_level=logical", "-c", "listen_addresses=*"]
     healthcheck:
       test: ["CMD", "psql", "-U", "postgres", "-c", "SELECT 1"]
       interval: 10s

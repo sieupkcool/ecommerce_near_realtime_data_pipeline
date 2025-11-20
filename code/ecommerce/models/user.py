@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 import hashlib
 from ecommerce.config.database import db_config
+import datetime
 
 
 class User(object):
@@ -15,15 +16,22 @@ class User(object):
         self.cur.close()
         self.conn.close()
 
-    def generate_fake_users(self, num_users=1):
+    def generate_fake_users(self, num_users=1, execution_date_str=None):
         try:
             user_data = []
+
+            # LOGIC XỬ LÝ NGÀY
+            if execution_date_str:
+                run_date = datetime.datetime.strptime(execution_date_str, '%Y-%m-%d')
+            else:
+                run_date = datetime.datetime.now()
+
             for _ in range(num_users):
                 username = self.fake.user_name()
                 password = hashlib.sha256(self.fake.password().encode('utf-8')).hexdigest()
                 email = self.fake.email()
                 mobile = self.fake.phone_number()
-                created_at = self.fake.date_time_between(start_date='-1y', end_date='now')
+                created_at = self.fake.date_time_between(start_date='-1y', end_date=run_date)
                 user_data.append((username, password, email, mobile, created_at))
 
             query = "INSERT INTO users (username, password, email, mobile, created_at) VALUES %s RETURNING id"
