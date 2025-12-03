@@ -83,9 +83,8 @@ class OrderRegistration(object):
             product_tax = item[2]
             product_price_after_tax = product_price * (product_tax / Decimal('100'))
             subtotal_amount = Decimal(product_price_after_tax * order_quantity)
-            unit_cost = product_price * Decimal(random.uniform(0.5, 0.9))
 
-            product[index] = (product_id, order_quantity, product_price, product_tax, subtotal_amount, unit_cost)
+            product[index] = (product_id, order_quantity, product_price, product_tax, subtotal_amount)
         return product
 
     def save_order(self):
@@ -146,7 +145,7 @@ class OrderRegistration(object):
 
                 order_detail_data = [(order_id, *item) for item in prepared_order_items]
                 insert_order_details_query = """
-                    INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount, unit_cost )
+                    INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount )
                     VALUES %s
                     """
                 execute_values(self.cur, insert_order_details_query, order_detail_data)
@@ -321,15 +320,14 @@ class OrderRegistration(object):
                     prod_id, prod_price, prod_tax = prod
                     quantity = random.randint(1, 3)
                     subtotal = prod_price * quantity
-                    unit_cost = prod_price * Decimal('0.8') # Giả sử
                     
                     final_order_details.append((
-                        order_id, prod_id, quantity, prod_price, prod_tax, subtotal, unit_cost, created_at
+                        order_id, prod_id, quantity, prod_price, prod_tax, subtotal, created_at
                     ))
 
             # Chèn 1000+ chi tiết đơn hàng
             insert_details_query = """
-                INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount, unit_cost, created_at)
+                INSERT INTO orderdetails (order_id, product_id, quantity, product_price, product_tax, subtotal_amount, created_at)
                 VALUES %s
             """
             execute_values(self.cur, insert_details_query, final_order_details)

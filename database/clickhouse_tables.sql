@@ -1,7 +1,10 @@
 -- Transactions Table and Materialized View ------------------------------
-USE ecommerce_mart;
 
-CREATE TABLE IF NOT EXISTS transactions
+CREATE DATABASE IF NOT EXISTS bronze;
+CREATE DATABASE IF NOT EXISTS silver;
+CREATE DATABASE IF NOT EXISTS gold;
+
+CREATE TABLE IF NOT EXISTS bronze.transactions
 (
     order_id UInt32,
     transaction_type LowCardinality(String),
@@ -16,7 +19,7 @@ PARTITION BY toYYYYMMDD(created_at)
 ORDER BY (order_id, created_at)
 TTL ttl + INTERVAL 7 DAY;
 
-CREATE TABLE IF NOT EXISTS _kafka_transactions
+CREATE TABLE IF NOT EXISTS bronze.kafka_transactions
 (
     -- Định nghĩa các cột Nullable, không dùng 'message'
     order_id Nullable(UInt32),
@@ -34,7 +37,7 @@ SETTINGS
     kafka_num_consumers = 2, -- Tăng consumer
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_transactions TO transactions
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_transactions TO bronze.transactions
 (
     order_id UInt32,
     transaction_type String,
@@ -50,13 +53,13 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_transactions TO transactions
     trim(lower(COALESCE(status, 'không rõ'))) AS status,
     
     -- Debezium gửi Int64 (microseconds), phải chia 1000
-    COALESCE(fromUnixTimestamp64Milli(intDiv(created_at, 1000)), now()) AS created_at,
+    COALESCE(fromUnixTimestamp64Milli(created_at), now()) AS created_at,
     now() as ttl
-FROM _kafka_transactions
+FROM bronze.kafka_transactions
 WHERE order_id IS NOT NULL; -- Lọc message rác
 
 -- Orders Table and Materialized View ---------------------------------
-CREATE TABLE IF NOT EXISTS orders
+CREATE TABLE IF NOT EXISTS bronze.orders
 (
     id UInt32,
     user_id UInt32,
@@ -81,7 +84,7 @@ ORDER BY (id)
 TTL ttl + INTERVAL 7 DAY
 SETTINGS allow_nullable_key = 1;
 
-CREATE TABLE IF NOT EXISTS _kafka_orders
+CREATE TABLE IF NOT EXISTS bronze.kafka_orders
 (
     id Nullable(UInt32),
     user_id Nullable(UInt32),
@@ -110,7 +113,7 @@ SETTINGS
     kafka_num_consumers = 4, -- THAY ĐỔI: 1000 đơn/phút, cần nhiều consumer
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orders TO orders
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orders TO bronze.orders
 (
     id UInt32,
     user_id UInt32,
@@ -142,30 +145,32 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orders TO orders
     COALESCE(order_status_id, 0) AS order_status_id, -- Gán 0 nếu status là null
     shipping_method_id,
     shipping_status_id,
-    fromUnixTimestamp64Milli(intDiv(created_at, 1000)) AS created_at
-FROM _kafka_orders
+    fromUnixTimestamp64Milli(created_at) AS created_at
+FROM bronze.kafka_orders
 WHERE id IS NOT NULL;
 
 -- Products table ---------------------------------------------
 
-CREATE TABLE IF NOT EXISTS products
+CREATE TABLE IF NOT EXISTS bronze.products
 (
 	id UInt32,
 	product_name String,
 	category_id Nullable(UInt32),
 	brand_id Nullable(UInt32),
-	product_price Nullable(Float32)
+	product_price Nullable(Float32),
+    unit_cost Nullable(Decimal(15, 2))
 )
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_products
+CREATE TABLE IF NOT EXISTS bronze.kafka_products
 (
     id Nullable(UInt32),
     product_name Nullable(String),
     category_id Nullable(UInt32),
     brand_id Nullable(UInt32),
-    product_price Nullable(Float32) -- Giữ Float32 hoặc đổi sang String nếu Debezium gửi là String
+    product_price Nullable(Float32), -- Giữ Float32 hoặc đổi sang String nếu Debezium gửi là String
+    unit_cost Nullable(String)
 )
 ENGINE Kafka
 SETTINGS
@@ -176,26 +181,28 @@ SETTINGS
     kafka_num_consumers = 2,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_products TO products
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_products TO bronze.products
 (
     id UInt32,
     product_name String,
     category_id Nullable(UInt32),
     brand_id Nullable(UInt32),
-    product_price Nullable(Float32)
+    product_price Nullable(Float32),
+    unit_cost Nullable(Decimal(15, 2))
 ) AS SELECT
     id,
     trim(COALESCE(product_name, 'Không tên')) AS product_name,
     category_id,
     brand_id,
-    product_price
-FROM _kafka_products
+    product_price,
+    toDecimal64OrNull(unit_cost, 2) AS unit_cost
+FROM bronze.kafka_products
 WHERE id IS NOT NULL AND product_price >= 0;
 
 
 -- Tags table ------------------------------------------
 
-CREATE TABLE IF NOT EXISTS tags
+CREATE TABLE IF NOT EXISTS bronze.tags
 (
     id UInt32,
     tag_name String
@@ -203,7 +210,7 @@ CREATE TABLE IF NOT EXISTS tags
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_tags
+CREATE TABLE IF NOT EXISTS bronze.kafka_tags
 (
     id Nullable(UInt32),
     tag_name Nullable(String)
@@ -217,19 +224,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_tags TO tags
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_tags TO bronze.tags
 (
     id UInt32,
     tag_name String
 ) AS SELECT
     id,
     trim(lower(COALESCE(tag_name, 'không rõ'))) AS tag_name
-FROM _kafka_tags
+FROM bronze.kafka_tags
 WHERE id IS NOT NULL;
 
 -- Brands table ---------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS brands
+CREATE TABLE IF NOT EXISTS bronze.brands
 (
     id UInt32,
     brand_name String
@@ -238,7 +245,7 @@ ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
 
-CREATE TABLE IF NOT EXISTS _kafka_brands
+CREATE TABLE IF NOT EXISTS bronze.kafka_brands
 (
     id Nullable(UInt32),
     brand_name Nullable(String)
@@ -253,19 +260,19 @@ SETTINGS
     kafka_skip_broken_messages = 10;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_brands TO brands
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_brands TO bronze.brands
 (
     id UInt32,
     brand_name String
 ) AS SELECT
     id,
     trim(COALESCE(brand_name, 'không rõ')) AS brand_name
-FROM _kafka_brands
+FROM bronze.kafka_brands
 WHERE id IS NOT NULL;
 
 -- Users table -------------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS users
+CREATE TABLE IF NOT EXISTS bronze.users
 (
     id UInt32,
     username String,
@@ -275,7 +282,7 @@ CREATE TABLE IF NOT EXISTS users
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_users
+CREATE TABLE IF NOT EXISTS bronze.kafka_users
 (
     id Nullable(UInt32),
     username Nullable(String),
@@ -290,7 +297,7 @@ SETTINGS
     kafka_num_consumers = 2,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_users TO users
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_users TO bronze.users
 (
     id UInt32,
     username String,
@@ -299,15 +306,15 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_users TO users
 ) AS SELECT
     id,
     trim(COALESCE(username, 'người dùng ẩn')) AS username,
-    fromUnixTimestamp64Milli(intDiv(created_at, 1000)) AS created_at,
+    fromUnixTimestamp64Milli(created_at) AS created_at,
     now() as ttl
-FROM _kafka_users
+FROM bronze.kafka_users
 WHERE id IS NOT NULL;
 
 
 -- roles table ------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS roles
+CREATE TABLE IF NOT EXISTS bronze.roles
 (
     id UInt32,
     role_name String
@@ -315,7 +322,7 @@ CREATE TABLE IF NOT EXISTS roles
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_roles
+CREATE TABLE IF NOT EXISTS bronze.kafka_roles
 (
     id Nullable(UInt32),
     role_name Nullable(String)
@@ -329,19 +336,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_roles TO roles
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_roles TO bronze.roles
 (
     id UInt32,
     role_name String
 ) AS SELECT
     id,
     trim(lower(COALESCE(role_name, 'không rõ'))) AS role_name
-FROM _kafka_roles
+FROM bronze.kafka_roles
 WHERE id IS NOT NULL;
 
 -- role_user table ----------------------------------------------
 
-CREATE TABLE IF NOT EXISTS role_user
+CREATE TABLE IF NOT EXISTS bronze.role_user
 (
     id UInt32,
     role_id UInt32,
@@ -350,7 +357,7 @@ CREATE TABLE IF NOT EXISTS role_user
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_role_user
+CREATE TABLE IF NOT EXISTS bronze.kafka_role_user
 (
     id Nullable(UInt32),
     role_id Nullable(UInt32),
@@ -365,7 +372,7 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_role_user TO role_user
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_role_user TO bronze.role_user
 (
     id UInt32,
     role_id UInt32,
@@ -374,12 +381,12 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_role_user TO role_user
     id,
     role_id,
     user_id
-FROM _kafka_role_user
+FROM bronze.kafka_role_user
 WHERE id IS NOT NULL;
 
 -- provinces table --------------------------------------------
 
-CREATE TABLE IF NOT EXISTS provinces
+CREATE TABLE IF NOT EXISTS bronze.provinces
 (
     id UInt32,
     province_name LowCardinality(String)
@@ -387,7 +394,7 @@ CREATE TABLE IF NOT EXISTS provinces
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_provinces
+CREATE TABLE IF NOT EXISTS bronze.kafka_provinces
 (
     id Nullable(UInt32),
     province_name Nullable(String)
@@ -401,19 +408,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_provinces TO provinces
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_provinces TO bronze.provinces
 (
     id UInt32,
     province_name String
 ) AS SELECT
     id,
     trim(lower(COALESCE(province_name, 'không rõ'))) AS province_name
-FROM _kafka_provinces
+FROM bronze.kafka_provinces
 WHERE id IS NOT NULL;
 
 -- Cities table -------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS cities
+CREATE TABLE IF NOT EXISTS bronze.cities
 (
     id UInt32,
     city_name LowCardinality(String),
@@ -424,7 +431,7 @@ CREATE TABLE IF NOT EXISTS cities
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_cities
+CREATE TABLE IF NOT EXISTS bronze.kafka_cities
 (
     id Nullable(UInt32),
     city_name Nullable(String),
@@ -441,7 +448,7 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_cities TO cities
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_cities TO bronze.cities
 (
     id UInt32,
     city_name String,
@@ -454,12 +461,12 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_cities TO cities
     province_id,
     latitude,
     longitude
-FROM _kafka_cities
+FROM bronze.kafka_cities
 WHERE id IS NOT NULL;
 
 -- Addresses table ---------------------------------------------
 
-CREATE TABLE IF NOT EXISTS addresses
+CREATE TABLE IF NOT EXISTS bronze.addresses
 (
     id UInt32,
     title LowCardinality(String),
@@ -470,7 +477,7 @@ CREATE TABLE IF NOT EXISTS addresses
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_addresses
+CREATE TABLE IF NOT EXISTS bronze.kafka_addresses
 (
     id Nullable(UInt32),
     title Nullable(String),
@@ -487,7 +494,7 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_addresses TO addresses
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_addresses TO bronze.addresses
 (
     id UInt32,
     title String,
@@ -500,12 +507,12 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_addresses TO addresses
     user_id,
     province_id,
     city_id
-FROM _kafka_addresses
+FROM bronze.kafka_addresses
 WHERE id IS NOT NULL;
 
 -- Categories Table ---------------------------------------------
 
-CREATE TABLE IF NOT EXISTS categories
+CREATE TABLE IF NOT EXISTS bronze.categories
 (
     id UInt32,
     category_name LowCardinality(String),
@@ -514,7 +521,7 @@ CREATE TABLE IF NOT EXISTS categories
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_categories
+CREATE TABLE IF NOT EXISTS bronze.kafka_categories
 (
     id Nullable(UInt32),
     category_name Nullable(String),
@@ -529,7 +536,7 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_categories TO categories
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_categories TO bronze.categories
 (
     id UInt32,
     category_name String,
@@ -538,11 +545,11 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_categories TO categories
     id,
     trim(lower(COALESCE(category_name, 'chưa phân loại'))) AS category_name,
     category_id
-FROM _kafka_categories
+FROM bronze.kafka_categories
 WHERE id IS NOT NULL;
 
 -- Product_Tag Table -------------------------------------
-CREATE TABLE IF NOT EXISTS product_tag
+CREATE TABLE IF NOT EXISTS bronze.product_tag
 (
     product_id UInt32,
     tag_id UInt32
@@ -550,7 +557,7 @@ CREATE TABLE IF NOT EXISTS product_tag
 ENGINE = ReplacingMergeTree() -- Không cần key, tự động xóa theo Primary Key
 ORDER BY (product_id, tag_id); -- Khóa chính là (product_id, tag_id)
 
-CREATE TABLE IF NOT EXISTS _kafka_product_tag
+CREATE TABLE IF NOT EXISTS bronze.kafka_product_tag
 (
     product_id Nullable(UInt32),
     tag_id Nullable(UInt32)
@@ -564,19 +571,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_product_tag TO product_tag
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_product_tag TO bronze.product_tag
 (
     product_id UInt32,
     tag_id UInt32
 ) AS SELECT
     product_id,
     tag_id
-FROM _kafka_product_tag
+FROM bronze.kafka_product_tag
 WHERE product_id IS NOT NULL AND tag_id IS NOT NULL;
 
 -- AdsCampaign Table ----------------------------------
 
-CREATE TABLE IF NOT EXISTS adscampaigns
+CREATE TABLE IF NOT EXISTS bronze.adscampaigns
 (
     id UInt32,
     campaign_title LowCardinality(String)
@@ -584,7 +591,7 @@ CREATE TABLE IF NOT EXISTS adscampaigns
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_adscampaign
+CREATE TABLE IF NOT EXISTS bronze.kafka_adscampaign
 (
     id Nullable(UInt32),
     campaign_title Nullable(String)
@@ -598,19 +605,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_adscampaigns TO adscampaigns
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_adscampaigns TO bronze.adscampaigns
 (
     id UInt32,
     campaign_title String
 ) AS SELECT
     id,
     trim(COALESCE(campaign_title, 'không rõ')) AS campaign_title
-FROM _kafka_adscampaign
+FROM bronze.kafka_adscampaign
 WHERE id IS NOT NULL;
 
 -- Discounts Table -------------------------------------------------
 
-CREATE TABLE IF NOT EXISTS discounts
+CREATE TABLE IF NOT EXISTS bronze.discounts
 (
     id UInt32,
     adscampaign_id Nullable(UInt32),
@@ -623,7 +630,7 @@ CREATE TABLE IF NOT EXISTS discounts
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_discounts
+CREATE TABLE IF NOT EXISTS bronze.kafka_discounts
 (
     id Nullable(UInt32),
     adscampaign_id Nullable(UInt32),
@@ -642,7 +649,7 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_discounts TO discounts
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_discounts TO bronze.discounts
 (
     id UInt32,
     adscampaign_id Nullable(UInt32),
@@ -659,12 +666,12 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_discounts TO discounts
     trim(upper(COALESCE(code, 'NOCODE'))) AS code,
     fromUnixTimestamp64Milli(intDiv(started_at, 1000)) AS started_at,
     fromUnixTimestamp64Milli(intDiv(expired_at, 1000)) AS expired_at
-FROM _kafka_discounts
+FROM bronze.kafka_discounts
 WHERE id IS NOT NULL;
 
 -- OrderStatus Table -------------------------------------------
 
-CREATE TABLE IF NOT EXISTS orderstatus
+CREATE TABLE IF NOT EXISTS bronze.orderstatus
 (
 	id UInt32,
 	order_status_name String
@@ -672,7 +679,7 @@ CREATE TABLE IF NOT EXISTS orderstatus
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_orderstatus
+CREATE TABLE IF NOT EXISTS bronze.kafka_orderstatus
 (
     id Nullable(UInt32),
     order_status_name Nullable(String)
@@ -686,19 +693,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orderstatus TO orderstatus
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orderstatus TO bronze.orderstatus
 (
     id UInt32,
     order_status_name String
 ) AS SELECT
     id,
     trim(COALESCE(order_status_name, 'Không rõ')) AS order_status_name
-FROM _kafka_orderstatus
+FROM bronze.kafka_orderstatus
 WHERE id IS NOT NULL;
 
 -- PaymentMethods Table -------------------------------------------
 
-CREATE TABLE IF NOT EXISTS paymentmethods
+CREATE TABLE IF NOT EXISTS bronze.paymentmethods
 (
 	id UInt32,
 	payment_method_name String
@@ -706,7 +713,7 @@ CREATE TABLE IF NOT EXISTS paymentmethods
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_paymentmethods
+CREATE TABLE IF NOT EXISTS bronze.kafka_paymentmethods
 (
     id Nullable(UInt32),
     payment_method_name Nullable(String)
@@ -720,19 +727,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_paymentmethods TO paymentmethods
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_paymentmethods TO bronze.paymentmethods
 (
     id UInt32,
     payment_method_name String
 ) AS SELECT
     id,
     trim(COALESCE(payment_method_name, 'Không rõ')) AS payment_method_name
-FROM _kafka_paymentmethods
+FROM bronze.kafka_paymentmethods
 WHERE id IS NOT NULL;
 
 -- Payment Status Table-------------------------------------
 
-CREATE TABLE IF NOT EXISTS paymentstatus
+CREATE TABLE IF NOT EXISTS bronze.paymentstatus
 (
 	id UInt32,
 	payment_status_name String
@@ -740,7 +747,7 @@ CREATE TABLE IF NOT EXISTS paymentstatus
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_paymentstatus
+CREATE TABLE IF NOT EXISTS bronze.kafka_paymentstatus
 (
     id Nullable(UInt32),
     payment_status_name Nullable(String)
@@ -754,19 +761,19 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_paymentstatus TO paymentstatus
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_paymentstatus TO bronze.paymentstatus
 (
     id UInt32,
     payment_status_name String
 ) AS SELECT
     id,
     trim(COALESCE(payment_status_name, 'Không rõ')) AS payment_status_name
-FROM _kafka_paymentstatus
+FROM bronze.kafka_paymentstatus
 WHERE id IS NOT NULL;
 
 -- Shipping Status Table-------------------------------------
 
-CREATE TABLE IF NOT EXISTS shippingstatus
+CREATE TABLE IF NOT EXISTS bronze.shippingstatus
 (
 	id UInt32,
 	shipping_status_name String
@@ -774,7 +781,7 @@ CREATE TABLE IF NOT EXISTS shippingstatus
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_shippingstatus
+CREATE TABLE IF NOT EXISTS bronze.kafka_shippingstatus
 (
     id Nullable(UInt32),
     shipping_status_name Nullable(String)
@@ -788,26 +795,26 @@ SETTINGS
     kafka_num_consumers = 1,
     kafka_skip_broken_messages = 10;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_shippingstatus TO shippingstatus
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_shippingstatus TO bronze.shippingstatus
 (
     id UInt32,
     shipping_status_name String
 ) AS SELECT
     id,
     trim(COALESCE(shipping_status_name, 'Không rõ')) AS shipping_status_name
-FROM _kafka_shippingstatus
+FROM bronze.kafka_shippingstatus
 WHERE id IS NOT NULL;
 
 -- Shipping Methods Table-------------------------------------
 
-CREATE TABLE IF NOT EXISTS shippingmethods
+CREATE TABLE IF NOT EXISTS bronze.shippingmethods
 (
 	id UInt32,
 	shipping_method_name String
 ) 
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
-CREATE TABLE IF NOT EXISTS _kafka_shippingmethods
+CREATE TABLE IF NOT EXISTS bronze.kafka_shippingmethods
 (
     id Nullable(UInt32),
     shipping_method_name Nullable(String)
@@ -822,19 +829,19 @@ SETTINGS
     kafka_skip_broken_messages = 10;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_shippingmethods TO shippingmethods
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_shippingmethods TO bronze.shippingmethods
 (
     id UInt32,
     shipping_method_name String
 ) AS SELECT
     id,
     trim(COALESCE(shipping_method_name, 'Không rõ')) AS shipping_method_name
-FROM _kafka_shippingmethods
+FROM bronze.kafka_shippingmethods
 WHERE id IS NOT NULL;
 
 -- OrderDetails Table-------------------------------------
 
-CREATE TABLE IF NOT EXISTS orderdetails
+CREATE TABLE IF NOT EXISTS bronze.orderdetails
 (
     id UInt32,
     order_id UInt32,
@@ -843,14 +850,13 @@ CREATE TABLE IF NOT EXISTS orderdetails
     product_price Nullable(Decimal(15, 2)),
     product_tax Nullable(Decimal(15, 2)),
     subtotal_amount Nullable(Decimal(15, 2)),
-    unit_cost Nullable(Decimal(15, 2)), 
     created_at Datetime64(3) DEFAULT now()
 ) 
 ENGINE = ReplacingMergeTree(id) 
 PARTITION BY (toYYYYMM(created_at))
 ORDER BY (id);
 
-CREATE TABLE IF NOT EXISTS _kafka_orderdetails
+CREATE TABLE IF NOT EXISTS bronze.kafka_orderdetails
 (
     id Nullable(UInt32),
     order_id Nullable(UInt32),
@@ -859,7 +865,6 @@ CREATE TABLE IF NOT EXISTS _kafka_orderdetails
     product_price Nullable(String),
     product_tax Nullable(String),
     subtotal_amount Nullable(String),
-    unit_cost Nullable(String), -- THÊM CỘT unit_cost CHO DASHBOARD
     created_at Nullable(Int64)
 )
 ENGINE Kafka
@@ -872,7 +877,7 @@ SETTINGS
     kafka_skip_broken_messages = 10;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orderdetails TO orderdetails
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orderdetails TO bronze.orderdetails
 (
     id UInt32,
     order_id UInt32,
@@ -881,7 +886,6 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orderdetails TO orderdetails
     product_price Nullable(Decimal(15, 2)),
     product_tax Nullable(Decimal(15, 2)),
     subtotal_amount Nullable(Decimal(15, 2)),
-    unit_cost Nullable(Decimal(15, 2)),
     created_at Nullable(Datetime64(3))
 ) AS SELECT
     id,
@@ -891,9 +895,8 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS mv_orderdetails TO orderdetails
     toDecimal64OrNull(product_price, 2) AS product_price,
     toDecimal64OrNull(product_tax, 2) AS product_tax,
     toDecimal64OrNull(subtotal_amount, 2) AS subtotal_amount,
-    toDecimal64OrNull(unit_cost, 2) AS unit_cost,
-    fromUnixTimestamp64Milli(intDiv(created_at, 1000)) AS created_at 
-FROM _kafka_orderdetails
+    fromUnixTimestamp64Milli(created_at) AS created_at 
+FROM bronze.kafka_orderdetails
 -- Lọc dữ liệu rác
 WHERE
     id IS NOT NULL AND quantity > 0;

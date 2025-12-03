@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS products
 	brand_id integer NOT NULL,
 	product_description text,
 	product_price NUMERIC(15,2) NOT NULL,
+	unit_cost NUMERIC(15,2) NOT NULL DEFAULT 0,
 	product_tax numeric(4,2) NOT NULL DEFAULT 0,
 	product_quantity integer NOT NULL DEFAULT 0,
 	product_image_path varchar,
@@ -238,7 +239,6 @@ CREATE TABLE IF NOT EXISTS orderdetails
 	product_tax numeric(15, 2) NOT NULL,
 	subtotal_amount numeric(15, 2) NOT NULL,
 	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	unit_cost NUMERIC(15,2) DEFAULT 0,
 	
 	FOREIGN KEY (order_id) REFERENCES orders(id),
 	FOREIGN KEY (product_id) REFERENCES products(id)

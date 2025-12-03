@@ -26,7 +26,9 @@ with DAG(
     'ecommerce_generate_discount_and_campaign',
     start_date=datetime(2025, 10, 30),
     schedule='@weekly',
-    default_args=default_args, catchup=True
+    default_args=default_args, 
+    catchup=True,
+    max_active_runs=1
 ) as dag:
 
     generate_campaign = PythonOperator(

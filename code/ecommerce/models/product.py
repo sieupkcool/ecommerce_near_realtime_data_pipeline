@@ -38,18 +38,19 @@ class Product:
                 brand_id = random.choice(brand_ids)
                 product_description = fake.text()
                 product_price = round(random.uniform(10.0, 1000.0), 2)
+                unit_cost = round(product_price * random.uniform(0.6, 0.8), 2)
                 product_tax = round(random.uniform(0.0, 20.0), 2)
                 product_quantity = random.randint(1, 100)
                 product_image_path = fake.image_url()
 
                 product_data.append((
                     product_name, category_id, brand_id, product_description,
-                    product_price, product_tax, product_quantity, product_image_path
+                    product_price, unit_cost, product_tax, product_quantity, product_image_path
                 ))
 
             query = """INSERT INTO products 
                        (product_name, category_id, brand_id, product_description,
-                       product_price, product_tax, product_quantity, product_image_path)
+                       product_price, unit_cost, product_tax, product_quantity, product_image_path)
                        VALUES %s"""
             execute_values(self.cur, query, product_data)
             self.conn.commit()

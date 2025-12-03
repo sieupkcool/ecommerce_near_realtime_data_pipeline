@@ -19,8 +19,10 @@ default_args = {
 with DAG(
     'ecommerce_generate_tag',
     start_date=datetime(2025, 10, 30),
-        schedule='@once',
-    default_args=default_args, catchup=True
+    schedule='@once',
+    default_args=default_args, 
+    catchup=True,
+    max_active_runs=1
 ) as dag:
 
     generate_tag = PythonOperator(
