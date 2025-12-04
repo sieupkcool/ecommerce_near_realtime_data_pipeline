@@ -1,10 +1,7 @@
 import psycopg2
 from psycopg2.extras import execute_values
 from ecommerce.config.database import db_config
-from faker import Faker
-import random
 import re
-
 
 class Category:
     def __init__(self):
@@ -16,57 +13,106 @@ class Category:
         self.conn.close()
 
     def generate_unique_slug(self, category_name, existing_slugs):
-        # Generate a unique slug based on the category name
-        slug = re.sub(r'\W+', '-', category_name.lower())
+        # Tạo slug từ tên
+        slug = re.sub(r'\W+', '-', category_name.lower()).strip('-')
         base_slug = slug
         counter = 1
-
+        
+        # Nếu slug đã tồn tại (do trùng tên với category KHÁC), thêm số
         while slug in existing_slugs:
             slug = f"{base_slug}-{counter}"
             counter += 1
-
+        
         return slug
 
-    def get_valid_category_ids(self):
-        # Fetch existing product category IDs from the table
-        self.cur.execute("SELECT id FROM categories WHERE category_name ILIKE 'Product%'")  # Assuming product categories start with 'Product'
-        return [row[0] for row in self.cur.fetchall()]
+    def generate_fake_categories(self, num_categories=None):
+        # BỘ DỮ LIỆU
+        ecommerce_categories = {
+            "Electronics": ["Smartphones", "Laptops", "Tablets", "Accessories"],
+            "Men's Fashion": ["Clothing", "Shoes", "Watches", "Accessories"],
+            "Women's Fashion": ["Dresses", "Handbags", "Jewelry", "Shoes"],
+            "Home & Living": ["Furniture", "Decoration", "Kitchenware", "Bedding"],
+            "Beauty": ["Skincare", "Makeup", "Fragrance", "Tools"],
+            "Health": ["Supplements", "Medical Supplies", "First Aid"],
+            "Sports & Outdoors": ["Gym Equipment", "Team Sports", "Camping", "Cycling"],
+            "Toys & Hobbies": ["Action Figures", "Board Games", "Electronic Toys"],
+            "Baby & Kids": ["Diapers", "Baby Gear", "Nursing", "Kids Clothing"],
+            "Automotive": ["Car Electronics", "Car Care", "Moto Accessories"],
+            "Books": ["Fiction", "Non-Fiction", "Education", "Comics"],
+            "Stationery": ["Writing", "Paper Products", "Office Supplies"],
+            "Groceries": ["Snacks", "Beverages", "Cooking Essentials"],
+            "Pet Supplies": ["Dog Food", "Cat Food", "Pet Toys"],
+            "Appliances": ["Large Appliances", "Small Kitchen Appliances", "Vacuums"],
+            "Garden": ["Plants", "Gardening Tools", "Outdoor Decor"],
+            "Musical Instruments": ["Guitars", "Keyboards", "Drums"],
+            "Tools & Hardware": ["Power Tools", "Hand Tools", "Safety Gear"]
+        }
 
-    def generate_fake_categories(self, num_categories):
-        fake = Faker()
         try:
-            existing_slugs = set()
+            # Map: Name -> ID (để kiểm tra trùng tên)
+            self.cur.execute("SELECT category_name, id FROM categories")
+            existing_map = {row[0]: row[1] for row in self.cur.fetchall()}
+            
+            # Set: Slugs (để tạo slug mới không trùng)
             self.cur.execute("SELECT slug FROM categories")
-            existing_slugs.update(row[0] for row in self.cur.fetchall())
+            existing_slugs = set(row[0] for row in self.cur.fetchall())
 
-            valid_category_ids = self.get_valid_category_ids()
+            total_inserted = 0
+            print("Bắt đầu đồng bộ danh mục (Idempotent Check)...")
 
-            category_data = []
-            for _ in range(num_categories):
-                category_name = fake.word()
-                slug = self.generate_unique_slug(category_name, existing_slugs)
+            for parent_name, sub_categories in ecommerce_categories.items():
+                
+                #XỬ LÝ CHA
+                parent_id = existing_map.get(parent_name)
 
-                if valid_category_ids:
-                    parent_category_id = random.choice([None] + valid_category_ids)  # Choose None or a valid product category ID
-                else:
-                    parent_category_id = None
+                if not parent_id:
+                    slug_parent = self.generate_unique_slug(parent_name, existing_slugs)
+                    
+                    insert_query = """
+                        INSERT INTO categories (category_name, slug, category_id) 
+                        VALUES (%s, %s, NULL) RETURNING id
+                    """
+                    self.cur.execute(insert_query, (parent_name, slug_parent))
+                    parent_id = self.cur.fetchone()[0]
+                    
+                    existing_map[parent_name] = parent_id
+                    existing_slugs.add(slug_parent)
+                    total_inserted += 1
+                
+                #XỬ LÝ CON
+                child_data_to_insert = []
+                for child_name in sub_categories:
+                    pass 
 
-                category_data.append((category_name, slug, parent_category_id))
-                existing_slugs.add(slug)
+                    slug_child_candidate = self.generate_unique_slug(child_name, existing_slugs)
+                    
+                    # Logic kiểm tra tồn tại trong DB cho con
+                    self.cur.execute(
+                        "SELECT id FROM categories WHERE category_name = %s AND category_id = %s",
+                        (child_name, parent_id)
+                    )
+                    child_exists = self.cur.fetchone()
 
-            query = "INSERT INTO categories (category_name, slug, category_id) VALUES %s"
-            execute_values(self.cur, query, category_data)
+                    if not child_exists:
+                        child_data_to_insert.append((child_name, slug_child_candidate, parent_id))
+                        existing_slugs.add(slug_child_candidate)
+
+                if child_data_to_insert:
+                    query_child = "INSERT INTO categories (category_name, slug, category_id) VALUES %s"
+                    execute_values(self.cur, query_child, child_data_to_insert)
+                    total_inserted += len(child_data_to_insert)
+
             self.conn.commit()
+            print(f"Hoàn tất! Số lượng danh mục mới được thêm: {total_inserted}")
+            print(f"Các danh mục cũ được giữ nguyên.")
 
         except Exception as e:
             self.conn.rollback()
-            print(f"Error while generating categories: {e}")
-
+            print(f"Lỗi khi tạo categories: {e}")
 
 def main():
     category_model_generator = Category()
-    category_model_generator.generate_fake_categories(num_categories=20)
-
+    category_model_generator.generate_fake_categories()
 
 if __name__ == "__main__":
     main()
