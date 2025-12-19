@@ -263,7 +263,7 @@ services:
       - services
 
   debezium-connector-init:
-    image: curlimages/curl:latest
+    image: debezium/connect:1.9 #curlimages/curl:latest
     container_name: debezium-connector-init
     depends_on:
       debezium:
@@ -281,12 +281,12 @@ services:
     hostname: clickhouse
     ports:
       - "8123:8123"
-      - "9000:9000"
+      - "9001:9000"
     env_file:
       - .env
     volumes:
       - clickhouse-data:/var/lib/clickhouse/
-      - ./database/clickhouse_tables.sql:/docker-entrypoint-initdb.d/clickhouse_tables.sql
+      - ./database/clickhouse_scripts/:/docker-entrypoint-initdb.d/
     networks:
       - services
     depends_on:
@@ -303,13 +303,37 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  
 
+  etl-worker:
+    image: clickhouse/clickhouse-server:24.8.8.17
+    depends_on:
+      - clickhouse
+    volumes:
+      - ./etl_job.sql:/etl_job.sql
+    entrypoint: 
+      - /bin/bash
+      - -c
+      - |
+        echo "Waiting for ClickHouse..."
+        sleep 15
+        while true; do
+          echo "[$(date)] Running ETL Job..."
+          
+          # 🔥 SỬA Ở ĐÂY: Thêm --user airflow
+          # (Giả sử password trong .env của bạn là airflow, nếu khác thì sửa lại)
+          clickhouse-client --host clickhouse --user airflow --password airflow --query="$(cat /etl_job.sql)"
+          
+          echo "Done. Sleeping 300s."
+          sleep 300
+        done
+    networks:
+      - services
 volumes:
   airflow-postgres-volume:
   postgres-main-volume:
   kafka-volume:
   clickhouse-data:
-
 networks:
   services:
     name: services
