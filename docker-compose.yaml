@@ -318,10 +318,8 @@ services:
         echo "Waiting for ClickHouse..."
         sleep 15
         while true; do
-          echo "[$(date)] Running ETL Job..."
+          echo "[$(date)] Running ETL Job..."          
           
-          # 🔥 SỬA Ở ĐÂY: Thêm --user airflow
-          # (Giả sử password trong .env của bạn là airflow, nếu khác thì sửa lại)
           clickhouse-client --host clickhouse --user airflow --password airflow --query="$(cat /etl_job.sql)"
           
           echo "Done. Sleeping 300s."

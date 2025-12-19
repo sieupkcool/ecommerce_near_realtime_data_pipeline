@@ -159,6 +159,30 @@ SELECT
     now() AS updated_at
 FROM bronze.orderdetails;
 
+--7. SILVER ORDER STATUS
+CREATE TABLE IF NOT EXISTS silver.order_status
+(
+    id UInt32,
+    name String,
+    updated_at DateTime
+) ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY id;
+
+-- 7.2. Đổ dữ liệu lịch sử (Backfill)
+INSERT INTO silver.order_status (id, name, updated_at)
+SELECT 
+    id, 
+    order_status_name AS name, 
+    now()
+FROM bronze.orderstatus;
+
+-- 7.3. Tạo MV hứng dữ liệu mới (Real-time)
+CREATE MATERIALIZED VIEW silver.mv_order_status TO silver.order_status AS
+SELECT 
+    id, 
+    order_status_name AS name, 
+    now() AS updated_at
+FROM bronze.orderstatus;
 
 -- =================================================================
 -- PHẦN 2: TẦNG GOLD (Star Schema & Reporting)
@@ -226,10 +250,24 @@ SELECT
     toYear(full_date), toQuarter(full_date), toMonth(full_date), toDayOfMonth(full_date)
 FROM numbers(3650); -- 10 năm
 
--- Dim Status/Payment... (Lấy trực tiếp từ Bronze cho gọn)
-CREATE TABLE IF NOT EXISTS gold.dim_order_status (id UInt32, name String, ver DateTime) ENGINE = ReplacingMergeTree(ver) ORDER BY id;
-CREATE MATERIALIZED VIEW IF NOT EXISTS gold.mv_dim_status TO gold.dim_order_status AS SELECT id, order_status_name, now() FROM bronze.orderstatus;
-INSERT INTO gold.dim_order_status VALUES (0, 'Unknown', now());
+-- Dim Order Status
+-- 1. Tạo bảng Dimension ở Gold
+DROP TABLE IF EXISTS gold.dim_order_status;
+CREATE TABLE gold.dim_order_status
+(
+    id UInt32,
+    name String,
+    updated_at DateTime
+) ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY id;
+
+-- 2. Đổ dữ liệu từ Silver -> Gold
+-- (Lần đầu chạy lệnh INSERT này để nạp dữ liệu)
+INSERT INTO gold.dim_order_status SELECT * FROM silver.order_status;
+
+-- 3. Tạo MV để Gold tự động cập nhật theo Silver
+CREATE MATERIALIZED VIEW gold.mv_dim_order_status TO gold.dim_order_status AS
+SELECT * FROM silver.order_status;
 
 
 -- 2. FACT TABLES (Real-time MVs) ----------------------------------
@@ -246,26 +284,39 @@ SELECT toYYYYMMDD(registration_date) AS date_key, count() AS user_amount
 FROM silver.users GROUP BY date_key;
 
 -- FACT_ORDER_OVERVIEW
+DROP TABLE IF EXISTS gold.FACT_ORDER_OVERVIEW;
 CREATE TABLE IF NOT EXISTS gold.FACT_ORDER_OVERVIEW
 (
     date_key UInt32,
     location_key UInt32,
     campaign_key UInt32,
-    order_status_id UInt32,
+    order_status_id UInt32,  
+    payment_method LowCardinality(String), 
+    shipping_method LowCardinality(String),
+
     order_count SimpleAggregateFunction(sum, UInt64),
     total_gmv SimpleAggregateFunction(sum, Decimal(38,2))
-) ENGINE = SummingMergeTree() ORDER BY (date_key, location_key, campaign_key, order_status_id);
+) ENGINE = SummingMergeTree()
+ORDER BY (date_key, location_key, campaign_key, order_status_id, payment_method, shipping_method);
 
+DROP VIEW IF EXISTS gold.mv_fact_overview;
 CREATE MATERIALIZED VIEW IF NOT EXISTS gold.mv_fact_overview TO gold.FACT_ORDER_OVERVIEW AS
 SELECT
-    toYYYYMMDD(created_at) AS date_key,
-    city_id AS location_key,
-    campaign_key,
-    order_status_id,
+    toYYYYMMDD(o.created_at) AS date_key,
+    o.city_id AS location_key,
+    o.campaign_key,
+    o.order_status_id,
+    --  JOIN để lấy tên từ Bronze
+    -- Nếu không tìm thấy ID thì để mặc định là 'Unknown'
+    coalesce(pm.payment_method_name, 'Unknown') AS payment_method,
+    coalesce(sm.shipping_method_name, 'Unknown') AS shipping_method,
     count() AS order_count,
-    sum(total_amount) AS total_gmv
-FROM silver.orders
-GROUP BY date_key, location_key, campaign_key, order_status_id;
+    CAST(sum(o.total_amount) AS Decimal(38,2)) AS total_gmv
+
+FROM silver.orders AS o
+LEFT JOIN bronze.paymentmethods AS pm ON o.payment_method_id = pm.id
+LEFT JOIN bronze.shippingmethods AS sm ON o.shipping_method_id = sm.id
+GROUP BY date_key, location_key, campaign_key, order_status_id, payment_method, shipping_method;
 
 -- 3. FACT TABLES (Scheduled Job - KHÔNG CÓ MV Ở ĐÂY) ---------------
 
