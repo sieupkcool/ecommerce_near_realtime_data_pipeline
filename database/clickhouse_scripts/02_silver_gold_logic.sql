@@ -90,8 +90,8 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS silver.mv_bronze_to_silver_users TO silve
 SELECT
     id AS user_id,
     username,
-    toDate(created_at) AS registration_date,
-    CAST(created_at AS DateTime) AS created_at,
+    toDate(CAST(created_at AS DateTime) - INTERVAL 7 HOUR) AS registration_date,
+    (CAST(created_at AS DateTime) - INTERVAL 7 HOUR) AS created_at,
     now() AS updated_at
 FROM bronze.users;
 
@@ -132,7 +132,7 @@ SELECT
     ifNull(o.order_amount, 0) AS order_amount,
     ifNull(o.discount_amount, 0) AS discount_amount,
     
-    CAST(o.created_at AS DateTime) AS created_at,
+    (CAST(o.created_at AS DateTime) - INTERVAL 7 HOUR) AS created_at,
     now() AS updated_at
 FROM bronze.orders AS o
 LEFT JOIN bronze.addresses AS a ON o.address_id = a.id
