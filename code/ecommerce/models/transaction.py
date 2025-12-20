@@ -26,10 +26,10 @@ class Transaction(object):
 
     def change_order_status_based_on_transaction_status(self, order_id, status):
         order = OrderRegistration()
-        if status:  # if transaction success
+        if status: 
             order_status_name = random.choice(['Processing', 'Shipped', 'Delivered'])
             order.change_order_status(order_id, order_status_name)
-        else:  # if transaction failed
+        else:  
             order_status_name = random.choice(['Pending', 'Cancelled'])
             order.change_order_status(order_id, order_status_name)
 
@@ -55,18 +55,15 @@ class Transaction(object):
         status_updates là một list các tuple: [(order_id, 'Processing'), (order_id, 'Cancelled'), ...]
         """
         
-        # 1. Lấy tất cả ID trạng thái một lần
         self.cur.execute("SELECT order_status_name, id FROM orderstatus")
-        status_map = dict(self.cur.fetchall()) # Ví dụ: {'Processing': 5, 'Cancelled': 2}
+        status_map = dict(self.cur.fetchall()) 
         
-        # 2. Chuẩn bị dữ liệu (status_id, order_id) để UPDATE
         update_data = []
         for order_id, new_status_name in status_updates:
             status_id = status_map.get(new_status_name)
             if status_id:
                 update_data.append((status_id, order_id))
                 
-        # 3. Dùng execute_values để CẬP NHẬT HÀNG LOẠT
         if update_data:
             update_query = """
                 UPDATE orders AS o
@@ -85,46 +82,36 @@ class Transaction(object):
             print("Không có ID đơn hàng nào để tạo giao dịch.")
             return
 
-        # 1. Pre-fetch: Lấy dữ liệu của 1000 đơn hàng một lúc
-        # Chuyển list sang tuple để dùng với ANY
-        # order_ids_tuple = tuple(order_ids_list)
         self.cur.execute("SELECT id, total_amount FROM orders WHERE id = ANY(%s)", (order_ids_list,))
         orders_to_process = self.cur.fetchall()
         
         transactions_to_insert = []
         statuses_to_update = []
         
-        # 2. Vòng lặp trong bộ nhớ (Rất nhanh)
         for order_id, amount in orders_to_process:
             is_success = random.choice([True, False])
             status_str = 'true' if is_success else 'false'
             transaction_type = 'payment'
             description = f'Fake bulk transaction cho đơn hàng #{order_id}'
             
-            # Thêm vào list để chèn
             transactions_to_insert.append((
                 order_id, transaction_type, amount, description, status_str
             ))
             
-            # Quyết định trạng thái đơn hàng mới
             if is_success:
-                # Mô phỏng: 70% đã giao, 20% đang ship, 10% đang xử lý
                 statuses_success = ['Processing', 'Shipped', 'Delivered']
                 weights_success = [0.10, 0.20, 0.70]
                 new_order_status = random.choices(statuses_success, weights=weights_success, k=1)[0]
             else:
-                # Mô phỏng: 80% bị hủy, 20% đang pending
                 statuses_fail = ['Pending', 'Cancelled']
                 weights_fail = [0.20, 0.80]
                 new_order_status = random.choices(statuses_fail, weights=weights_fail, k=1)[0]
             
-            # Thêm vào list để cập nhật
             statuses_to_update.append((order_id, new_order_status))
         
         try:
             self.cur.execute("BEGIN;")
             
-            # 3. Bulk Insert: Chèn 1000 giao dịch
             insert_query = """
                 INSERT INTO transactions (order_id, transaction_type, amount, description, status)
                 VALUES %s
@@ -132,7 +119,6 @@ class Transaction(object):
             execute_values(self.cur, insert_query, transactions_to_insert)
             print(f"Đã chèn hàng loạt {len(transactions_to_insert)} giao dịch.")
             
-            # 4. Bulk Update: Cập nhật 1000 trạng thái đơn hàng
             self._bulk_change_order_status(statuses_to_update)
             
             self.conn.commit()

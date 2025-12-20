@@ -21,7 +21,6 @@ class Discount:
 
     def generate_discounts(self, num_discounts, execution_date_str=None):
         try:
-            # LOGIC XỬ LÝ NGÀY
             if execution_date_str:
                 run_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
             else:
@@ -32,20 +31,18 @@ class Discount:
             discount_data = []
             for _ in range(num_discounts):
                 if campaign_ids:
-                    # Randomly assign adscampaign_id as null or a value from the campaign IDs
                     adscampaign_id = random.choice([None] + campaign_ids)
                 else:
                     adscampaign_id = None
                 discount_type = random.choice(['percent', 'amount'])
                 if discount_type == 'percent':
-                    value = random.randint(1, 100)  # Value between 1 and 100 for percentage type
+                    value = random.randint(1, 100)
                 else:
-                    value = round(random.uniform(1, 1000), 2)  # Random value for amount type
+                    value = round(random.uniform(1, 1000), 2)
 
                 started_at = run_date - timedelta(days=random.randint(1, 30))
                 expired_at = started_at + timedelta(days=random.randint(1, 30))
 
-                # Generate a unique code for each discount (10 characters)
                 code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
 
                 discount_data.append((adscampaign_id, discount_type, value, started_at, expired_at, code))
@@ -63,7 +60,7 @@ class Discount:
 
 
 def main():
-    num_discounts = 1  # Specify the number of discounts to generate
+    num_discounts = 1
     discounts_model_generator = Discount()
     discounts_model_generator.generate_discounts(num_discounts)
 

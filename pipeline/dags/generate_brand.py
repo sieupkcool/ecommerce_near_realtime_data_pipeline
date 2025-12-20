@@ -1,11 +1,10 @@
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.datasets import Dataset # <-- THÊM DÒNG NÀY
+from airflow.datasets import Dataset 
 
 from ecommerce.models.brand import Brand
 
-# ĐỊNH NGHĨA MỘT DATASET
 BRAND_DATASET = Dataset("ecommerce://brand")
 
 def generate_brand_data(num_brands=1):
@@ -32,5 +31,5 @@ with DAG(
         task_id='generate_brand',
         python_callable=generate_brand_data,
         op_args=[5],
-        outlets=[BRAND_DATASET] # <-- THÊM DÒNG NÀY
+        outlets=[BRAND_DATASET] 
     )

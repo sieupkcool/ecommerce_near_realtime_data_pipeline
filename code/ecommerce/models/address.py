@@ -16,7 +16,7 @@ class Address:
     def generate_addresses(self):
         fake = Faker()
         try:
-            # Fetching user IDs from the users table where address doesn't exist
+            # lấy user chưa có địa chỉ
             self.cur.execute("SELECT id FROM users WHERE NOT EXISTS"
                              "(SELECT user_id FROM addresses WHERE user_id = users.id)")
             user_ids = [row[0] for row in self.cur.fetchall()]
@@ -25,11 +25,10 @@ class Address:
             for user_id in user_ids:
                 title = fake.random_element(["home", "office"])
 
-                # Fetching a random city
+                # lấy 1 thành phố ngẫu nhiên
                 self.cur.execute("SELECT id, province_id FROM cities ORDER BY RANDOM() LIMIT 1")
                 city_id, province_id = self.cur.fetchone()
 
-                # Generate a realistic address
                 street_address = fake.street_address()
                 other_address_elements = fake.secondary_address()
                 full_address = f"{street_address}, {other_address_elements}"

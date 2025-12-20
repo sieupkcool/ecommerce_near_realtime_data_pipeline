@@ -15,7 +15,6 @@ class ProductTag:
 
     def generate_product_tag_associations(self, num_associations):
         try:
-            # Fetch all product and tag IDs from respective tables
             self.cur.execute("SELECT id FROM products")
             product_ids = [row[0] for row in self.cur.fetchall()]
 
@@ -27,7 +26,6 @@ class ProductTag:
                 product_id = random.choice(product_ids)
                 tag_id = random.choice(tag_ids)
 
-                # Check the number of tags associated with the current product
                 self.cur.execute(
                     "SELECT COUNT(*) FROM product_tag WHERE product_id = %s",
                     (product_id,)
@@ -37,7 +35,6 @@ class ProductTag:
                 if tag_count < 5:
                     product_tag_data.append((product_id, tag_id))
 
-            # Insert unique combinations of product_id and tag_id
             insert_query = """
                 INSERT INTO product_tag (product_id, tag_id)
                 VALUES %s

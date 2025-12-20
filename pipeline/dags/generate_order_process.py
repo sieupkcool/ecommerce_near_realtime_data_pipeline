@@ -43,14 +43,12 @@ def order_process():
 
         run_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
         
-        # 0 = Thứ 2, 1 = T3, ..., 5 = T7, 6 = CN
         day_of_week = run_date.weekday()
 
-        # Tạo mô hình: Cuối tuần bận rộn
         if day_of_week >= 5: 
-            base_orders = random.randint(2000, 3000) # Nhiều đơn hơn
+            base_orders = random.randint(2000, 3000) 
         else:
-            base_orders = random.randint(800, 1200) # Ít đơn hơn
+            base_orders = random.randint(800, 1200) 
 
         order = OrderRegistration()
         order_ids_list = order.generate_bulk_orders(base_orders, execution_date_str)

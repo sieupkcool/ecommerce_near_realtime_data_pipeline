@@ -900,3 +900,205 @@ FROM bronze.kafka_orderdetails
 -- Lọc dữ liệu rác
 WHERE
     id IS NOT NULL AND quantity > 0;
+
+
+-- Testing dim fact
+CREATE DATABASE IF NOT EXISTS analytics;
+
+-- Category 
+CREATE TABLE IF NOT EXISTS analytics.dim_category (
+    category_id UInt32,
+    category_name String,
+    updated_at DateTime64(3)
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY category_id;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_dim_category TO analytics.dim_category
+AS SELECT id, category_name, now64() 
+FROM bronze.categories WHERE category_id IS NULL; 
+
+-- Subcategory
+CREATE TABLE IF NOT EXISTS analytics.subcategory (
+    subcategory_id UInt32,
+    category_id UInt32,
+    subcategory_name String,
+    updated_at DateTime64(3)
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY subcategory_id;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_subcategory TO analytics.subcategory
+AS SELECT id, category_id, category_name, now64() 
+FROM bronze.categories WHERE category_id IS NOT NULL;
+
+-- Brand
+CREATE TABLE IF NOT EXISTS analytics.dim_brand (
+    brand_id UInt32,
+    brand_name String,
+    updated_at DateTime64(3)
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY brand_id;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_dim_brand TO analytics.dim_brand
+AS SELECT id, brand_name, now64() FROM bronze.brands;
+
+-- Product
+CREATE TABLE IF NOT EXISTS analytics.dim_product (
+    product_key UInt32,
+    product_name String,
+    subcategory_id UInt32,
+    brand_id UInt32,
+    updated_at DateTime64(3)
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY product_key;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_dim_product TO analytics.dim_product
+AS SELECT id, product_name, COALESCE(category_id, 0), COALESCE(brand_id, 0), now64() FROM bronze.products;
+
+-- Date
+CREATE TABLE IF NOT EXISTS analytics.dim_date
+(
+    date_key Date,
+    year UInt16,
+    quarter UInt8,
+    month UInt8,
+    day UInt8,
+    day_of_week UInt8,
+    is_weekend UInt8
+) ENGINE = MergeTree()
+ORDER BY date_key;
+
+-- nạp dữ liệu cho 10 năm
+INSERT INTO analytics.dim_date
+SELECT
+    date,
+    toYear(date) AS year,
+    toQuarter(date) AS quarter,
+    toMonth(date) AS month,
+    toDayOfMonth(date) AS day,
+    toDayOfWeek(date) AS day_of_week,
+    if(toDayOfWeek(date) IN (6, 7), 1, 0) AS is_weekend
+FROM (
+    SELECT toDate('2025-10-01') + number AS date
+    FROM numbers(3653)
+);
+
+-- Location
+CREATE TABLE IF NOT EXISTS analytics.dim_location (
+    city_name String,
+    province_name String,
+    updated_at DateTime64(3)
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY city_name;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_dim_location TO analytics.dim_location
+AS SELECT c.city_name, p.province_name, now64()
+FROM bronze.cities c JOIN bronze.provinces p ON c.province_id = p.id;
+
+-- Campaign
+CREATE TABLE IF NOT EXISTS analytics.dim_campaign (
+    campaign_key UInt32,
+    campaign_title String,
+    start_at_key Date,
+    expired_at_key Date,
+    updated_at DateTime64(3)
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY campaign_key;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_dim_campaign TO analytics.dim_campaign
+AS SELECT a.id, a.campaign_title, toDate(d.started_at), toDate(d.expired_at), now64()
+FROM bronze.adscampaigns a LEFT JOIN bronze.discounts d ON a.id = d.adscampaign_id;
+
+-- Fact User
+CREATE TABLE IF NOT EXISTS analytics.fact_user (
+    date_key Date,
+    user_count UInt64
+) ENGINE = SummingMergeTree() ORDER BY date_key;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_fact_user TO analytics.fact_user
+AS SELECT toDate(created_at) AS date_key, count() AS user_count FROM bronze.users GROUP BY date_key;
+
+-- Fact Product Campaign
+CREATE TABLE IF NOT EXISTS analytics.fact_product_campaign (
+    product_key UInt32,
+    date_key Date,
+    campaign_key UInt32,
+    city_name String,
+    quantity Int64,
+    total_cost Decimal(18, 2),
+    gmv_gross Decimal(18, 2),
+    total_discount_val Decimal(18, 2),
+    gmv_net Decimal(18, 2),
+    order_count UInt64
+) ENGINE = SummingMergeTree() ORDER BY (product_key, date_key, campaign_key, city_name);
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_fact_product_campaign TO analytics.fact_product_campaign
+AS SELECT
+    od.product_id AS product_key,
+    toDate(od.created_at) AS date_key,
+    COALESCE(o.discount_id, 0) AS campaign_key,
+    COALESCE(addr.city_name, 'Unknown') AS city_name,
+    sum(od.quantity) AS quantity,
+    sum(od.quantity * p.unit_cost) AS total_cost,
+    sum(od.quantity * od.product_price) AS gmv_gross,
+    sum(o.discount_amount * (od.subtotal_amount / o.total_amount)) AS total_discount_val,
+    sum(od.subtotal_amount) AS gmv_net,
+    count(DISTINCT od.order_id) AS order_count
+FROM bronze.orderdetails od
+LEFT JOIN bronze.orders o ON od.order_id = o.id
+LEFT JOIN bronze.products p ON od.product_id = p.id
+LEFT JOIN (SELECT a.id, c.city_name FROM bronze.addresses a JOIN bronze.cities c ON a.city_id = c.id) addr ON o.address_id = addr.id
+GROUP BY product_key, date_key, campaign_key, city_name;
+
+-- Fact Order Shipping Status
+CREATE TABLE IF NOT EXISTS analytics.fact_order_shipping_status (
+    date_key Date,
+    city_name String,
+    campaign_key UInt32,
+    -- Counts
+    standard_shipping_order_count UInt64,
+    express_shipping_order_count UInt64,
+    next_day_delivery_order_count UInt64,
+    free_shipping_order_count UInt64,
+    store_pickup_order_count UInt64,
+    -- GMV
+    standard_shipping_gmv Decimal(18, 2),
+    express_shipping_gmv Decimal(18, 2),
+    next_day_delivery_gmv Decimal(18, 2),
+    free_shipping_gmv Decimal(18, 2),
+    store_pickup_gmv Decimal(18, 2),
+    -- Status Counts
+    pending_order_count UInt64,
+    authorized_order_count UInt64,
+    completed_order_count UInt64,
+    failed_order_count UInt64,
+    refunded_order_count UInt64
+) ENGINE = SummingMergeTree() ORDER BY (date_key, city_name, campaign_key);
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_fact_order_shipping_status 
+TO analytics.fact_order_shipping_status
+AS SELECT
+    toDate(o.created_at) AS date_key,
+    COALESCE(addr.city_name, 'Unknown') AS city_name,
+    COALESCE(o.discount_id, 0) AS campaign_key,
+    
+    -- map với shipping method
+    countIf(o.shipping_method_id = 1) AS standard_shipping_order_count,
+    countIf(o.shipping_method_id = 2) AS express_shipping_order_count,
+    countIf(o.shipping_method_id = 3) AS next_day_delivery_order_count,
+    countIf(o.shipping_method_id = 4) AS free_shipping_order_count,
+    countIf(o.shipping_method_id = 5) AS store_pickup_order_count,
+    
+    sumIf(o.total_amount, o.shipping_method_id = 1) AS standard_shipping_gmv,
+    sumIf(o.total_amount, o.shipping_method_id = 2) AS express_shipping_gmv,
+    sumIf(o.total_amount, o.shipping_method_id = 3) AS next_day_delivery_gmv,
+    sumIf(o.total_amount, o.shipping_method_id = 4) AS free_shipping_gmv,
+    sumIf(o.total_amount, o.shipping_method_id = 5) AS store_pickup_gmv,
+    
+    -- map với order status
+    countIf(o.order_status_id = 1) AS pending_order_count,      
+    countIf(o.order_status_id = 2) AS authorized_order_count,   
+    countIf(o.order_status_id = 4) AS completed_order_count,    
+    countIf(o.order_status_id = 5) AS failed_order_count,       
+    countIf(o.order_status_id = 3) AS shipped_order_count       
+    
+FROM bronze.orders o
+LEFT JOIN (
+    SELECT a.id, c.city_name 
+    FROM bronze.addresses a 
+    JOIN bronze.cities c ON a.city_id = c.id
+) addr ON o.address_id = addr.id
+GROUP BY date_key, city_name, campaign_key;

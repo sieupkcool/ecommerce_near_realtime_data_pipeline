@@ -18,7 +18,7 @@ class Category:
         base_slug = slug
         counter = 1
         
-        # Nếu slug đã tồn tại (do trùng tên với category KHÁC), thêm số
+        # Nếu slug đã tồn tại thì thêm số
         while slug in existing_slugs:
             slug = f"{base_slug}-{counter}"
             counter += 1
@@ -26,7 +26,6 @@ class Category:
         return slug
 
     def generate_fake_categories(self, num_categories=None):
-        # BỘ DỮ LIỆU
         ecommerce_categories = {
             "Electronics": ["Smartphones", "Laptops", "Tablets", "Accessories"],
             "Men's Fashion": ["Clothing", "Shoes", "Watches", "Accessories"],
@@ -49,11 +48,11 @@ class Category:
         }
 
         try:
-            # Map: Name -> ID (để kiểm tra trùng tên)
+            # Map: name->id để kiểm tra trùng tên
             self.cur.execute("SELECT category_name, id FROM categories")
             existing_map = {row[0]: row[1] for row in self.cur.fetchall()}
             
-            # Set: Slugs (để tạo slug mới không trùng)
+            # Set: Slug để tạo slug mới không trùng
             self.cur.execute("SELECT slug FROM categories")
             existing_slugs = set(row[0] for row in self.cur.fetchall())
 
@@ -62,7 +61,6 @@ class Category:
 
             for parent_name, sub_categories in ecommerce_categories.items():
                 
-                #XỬ LÝ CHA
                 parent_id = existing_map.get(parent_name)
 
                 if not parent_id:
@@ -79,14 +77,12 @@ class Category:
                     existing_slugs.add(slug_parent)
                     total_inserted += 1
                 
-                #XỬ LÝ CON
                 child_data_to_insert = []
                 for child_name in sub_categories:
                     pass 
 
                     slug_child_candidate = self.generate_unique_slug(child_name, existing_slugs)
                     
-                    # Logic kiểm tra tồn tại trong DB cho con
                     self.cur.execute(
                         "SELECT id FROM categories WHERE category_name = %s AND category_id = %s",
                         (child_name, parent_id)

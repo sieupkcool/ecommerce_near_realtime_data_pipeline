@@ -115,50 +115,41 @@ class Product:
             print(f"Bắt đầu tạo {num_products} sản phẩm đa dạng...")
 
             for _ in range(num_products):
-                # 1. Chọn Category
                 cat_id, cat_name = random.choice(categories)
                 
-                # 2. Tìm công thức (Recipe) dựa trên tên Category
-                # Tìm xem tên Category có chứa từ khóa nào trong recipe không (vd: "Men's Fashion" chứa "Fashion")
                 recipe = default_recipe
                 for key, val in product_recipes.items():
                     if key.lower() in cat_name.lower():
                         recipe = val
                         break
                 
-                # 3. TỔ HỢP TÊN (Combinatorial Name Generation)
                 prefix = random.choice(recipe["prefixes"])
                 base = random.choice(recipe["bases"])
                 suffix = random.choice(recipe["suffixes"])
                 
-                # Có thể random bỏ prefix hoặc suffix để tên tự nhiên hơn
                 name_style = random.choice([1, 2, 3])
                 if name_style == 1:
                     product_name = f"{prefix} {base} {suffix}"
                 elif name_style == 2:
-                    product_name = f"{base} {suffix}" # Bỏ prefix
+                    product_name = f"{base} {suffix}" 
                 else:
-                    product_name = f"{prefix} {base}" # Bỏ suffix
+                    product_name = f"{prefix} {base}" 
 
-                # 4. Sinh giá tiền thông minh
                 min_p, max_p = recipe["price"]
                 product_price = round(random.uniform(min_p, max_p), 2)
                 
-                # Nếu tên có từ "Pro", "Ultra", "Luxury" -> Tăng giá
                 if any(x in product_name for x in ["Pro", "Ultra", "Luxury", "Elite", "Max"]):
                     product_price = round(product_price * 1.5, 2)
                 
-                # Nếu tên có từ "Lite", "Mini", "Basic" -> Giảm giá
                 if any(x in product_name for x in ["Lite", "Mini", "Basic"]):
                     product_price = round(product_price * 0.7, 2)
 
                 unit_cost = round(product_price * random.uniform(0.6, 0.85), 2)
                 product_tax = round(random.uniform(5.0, 12.0), 2)
-                product_quantity = random.randint(0, 500) # Có thể có hàng hết tồn kho = 0
+                product_quantity = random.randint(0, 500) 
 
                 brand_id = random.choice(brand_ids) if brand_ids else None
                 
-                # 5. Mô tả và Ảnh
                 descriptions = [
                     f"High quality {base} designed for daily use.",
                     f"The all-new {product_name} features advanced technology.",
@@ -168,7 +159,6 @@ class Product:
                 ]
                 product_description = random.choice(descriptions)
                 
-                # Ảnh giả theo tên Base (để hình ảnh khớp với vật thể)
                 img_keyword = base.replace(' ', '+')
                 product_image_path = f"https://placehold.co/600x400?text={img_keyword}"
 
@@ -177,7 +167,6 @@ class Product:
                     product_price, unit_cost, product_tax, product_quantity, product_image_path
                 ))
 
-            # Bulk Insert
             query = """INSERT INTO products 
                        (product_name, category_id, brand_id, product_description,
                        product_price, unit_cost, product_tax, product_quantity, product_image_path)

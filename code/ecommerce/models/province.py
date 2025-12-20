@@ -7,7 +7,6 @@ class Province:
     def __init__(self):
         self.conn = psycopg2.connect(**db_config)
         self.cur = self.conn.cursor()
-        # Đường dẫn tới file CSV bên trong container
         self.csv_path = '/opt/airflow/data/uscities.csv'
 
     def __del__(self):
@@ -19,17 +18,12 @@ class Province:
         Đọc file CSV, lấy các bang duy nhất và chèn vào bảng 'provinces'.
         """
         try:
-            # 1. Đọc file CSV
             df_csv = pd.read_csv(self.csv_path)
             
-            # 2. Lấy danh sách các bang duy nhất (unique)
             unique_provinces = df_csv['state_name'].unique()
             
-            # 3. Chuẩn bị dữ liệu để chèn
-            # Chuyển ["Alabama", "Alaska"] thành [("Alabama",), ("Alaska",)]
             province_data = [(name,) for name in unique_provinces]
             
-            # 4. Chèn hàng loạt vào DB
             if province_data:
                 query = "INSERT INTO provinces (province_name) VALUES %s ON CONFLICT (province_name) DO NOTHING"
                 execute_values(self.cur, query, province_data)

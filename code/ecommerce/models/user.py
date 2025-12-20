@@ -20,7 +20,6 @@ class User(object):
         try:
             user_data = []
 
-            # LOGIC XỬ LÝ NGÀY
             if execution_date_str:
                 run_date = datetime.datetime.strptime(execution_date_str, '%Y-%m-%d')
             else:
@@ -43,10 +42,6 @@ class User(object):
             print(f"Error while generating users: {e}")
     
     def has_customer_user(self):
-        """
-        Kiểm tra xem đã có ít nhất 1 user có role 'customer' chưa.
-        Trả về True nếu có, False nếu chưa có.
-        """
         try:
             query = """
                 SELECT 1
