@@ -20,4 +20,4 @@ kafka-data/
 .DS_Store
 Thumbs.db
 
-!data/uscities.csv
+!data/vncities.csv
