@@ -1,0 +1,114 @@
+﻿city,city_ascii,state_id,state_name,county_fips,county_name,lat,lng,population,density,source,military,incorporated,timezone,ranking,zips,id
+Hà Nội,Ha Noi,01,Hà Nội,01,Hà Nội,21.0285,105.8542,8246600,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,1
+Hồ Chí Minh,Ho Chi Minh,79,Hồ Chí Minh,79,Hồ Chí Minh,10.8231,106.6297,9077158,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,2
+Đà Nẵng,Da Nang,48,Đà Nẵng,48,Đà Nẵng,16.0544,108.2022,1134310,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,3
+Cần Thơ,Can Tho,92,Cần Thơ,92,Cần Thơ,10.0452,105.7469,1282000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,4
+Hải Phòng,Hai Phong,31,Hải Phòng,31,Hải Phòng,20.8449,106.6881,2028514,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,5
+Hà Giang,Ha Giang,02,Hà Giang,02,Hà Giang,22.8026,104.9784,854679,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,6
+Cao Bằng,Cao Bang,04,Cao Bằng,04,Cao Bằng,22.6356,106.2522,539000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,7
+Bắc Kạn,Bac Kan,06,Bắc Kạn,06,Bắc Kạn,22.1474,105.8348,313905,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,8
+Tuyên Quang,Tuyen Quang,08,Tuyên Quang,08,Tuyên Quang,21.8237,105.228,784811,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,9
+Lào Cai,Lao Cai,10,Lào Cai,10,Lào Cai,22.4856,103.9707,730000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,10
+Điện Biên,Dien Bien,11,Điện Biên,11,Điện Biên,21.3833,103.0167,598856,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,11
+Lai Châu,Lai Chau,12,Lai Châu,12,Lai Châu,22.3864,103.4702,460196,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,12
+Sơn La,Son La,14,Sơn La,14,Sơn La,21.3256,103.9188,1248415,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,13
+Yên Bái,Yen Bai,15,Yên Bái,15,Yên Bái,21.7167,104.8986,821030,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,14
+Hòa Bình,Hoa Binh,17,Hòa Bình,17,Hòa Bình,20.8142,105.3386,854679,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,15
+Thái Nguyên,Thai Nguyen,19,Thái Nguyên,19,Thái Nguyên,21.5671,105.8252,1288000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,16
+Lạng Sơn,Lang Son,20,Lạng Sơn,20,Lạng Sơn,21.8537,106.761,789595,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,17
+Quảng Ninh,Quang Ninh,22,Quảng Ninh,22,Quảng Ninh,21.0064,107.2925,1320324,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,18
+Bắc Giang,Bac Giang,24,Bắc Giang,24,Bắc Giang,21.2819,106.1974,1803950,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,19
+Phú Thọ,Phu Tho,25,Phú Thọ,25,Phú Thọ,21.2686,105.2045,1466934,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,20
+Vĩnh Phúc,Vinh Phuc,26,Vĩnh Phúc,26,Vĩnh Phúc,21.3609,105.5474,1154839,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,21
+Bắc Ninh,Bac Ninh,27,Bắc Ninh,27,Bắc Ninh,21.1861,106.0763,1368840,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,22
+Hải Dương,Hai Duong,30,Hải Dương,30,Hải Dương,20.9373,106.3145,1892000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,23
+Hưng Yên,Hung Yen,33,Hưng Yên,33,Hưng Yên,20.6464,106.0511,1241100,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,24
+Thái Bình,Thai Binh,34,Thái Bình,34,Thái Bình,20.4464,106.3365,1868600,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,25
+Hà Nam,Ha Nam,35,Hà Nam,35,Hà Nam,20.5835,105.923,854679,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,26
+Nam Định,Nam Dinh,36,Nam Định,36,Nam Định,20.4388,106.1621,1850000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,27
+Ninh Bình,Ninh Binh,37,Ninh Bình,37,Ninh Bình,20.2506,105.9745,982487,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,28
+Thanh Hóa,Thanh Hoa,38,Thanh Hóa,38,Thanh Hóa,19.8067,105.7851,3640000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,29
+Nghệ An,Nghe An,40,Nghệ An,40,Nghệ An,19.2342,104.92,3129000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,30
+Hà Tĩnh,Ha Tinh,42,Hà Tĩnh,42,Hà Tĩnh,18.3559,105.8877,1288866,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,31
+Quảng Bình,Quang Binh,44,Quảng Bình,44,Quảng Bình,17.4676,106.622,912710,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,32
+Quảng Trị,Quang Tri,45,Quảng Trị,45,Quảng Trị,16.7943,107.1856,642680,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,33
+Thừa Thiên Huế,Thua Thien Hue,46,Thừa Thiên Huế,46,Thừa Thiên Huế,16.4637,107.5909,1154000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,34
+Quảng Nam,Quang Nam,49,Quảng Nam,49,Quảng Nam,15.5394,108.0191,1495000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,35
+Quảng Ngãi,Quang Ngai,51,Quảng Ngãi,51,Quảng Ngãi,15.1214,108.8044,1276000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,36
+Bình Định,Binh Dinh,52,Bình Định,52,Bình Định,14.1665,109.0095,1501800,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,37
+Phú Yên,Phu Yen,54,Phú Yên,54,Phú Yên,13.0881,109.0929,900000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,38
+Khánh Hòa,Khanh Hoa,56,Khánh Hòa,56,Khánh Hòa,12.2585,109.0526,1231100,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,39
+Ninh Thuận,Ninh Thuan,58,Ninh Thuận,58,Ninh Thuận,11.6739,108.8629,610000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,40
+Bình Thuận,Binh Thuan,60,Bình Thuận,60,Bình Thuận,11.0904,108.072,1230000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,41
+Kon Tum,Kon Tum,62,Kon Tum,62,Kon Tum,14.3497,108.0004,530000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,42
+Gia Lai,Gia Lai,64,Gia Lai,64,Gia Lai,13.983,108.1093,1513847,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,43
+Đắk Lắk,Dak Lak,66,Đắk Lắk,66,Đắk Lắk,12.71,108.2378,1868197,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,44
+Đắk Nông,Dak Nong,67,Đắk Nông,67,Đắk Nông,12.2646,107.6098,612000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,45
+Lâm Đồng,Lam Dong,68,Lâm Đồng,68,Lâm Đồng,11.5753,108.1429,1296906,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,46
+Bình Phước,Binh Phuoc,70,Bình Phước,70,Bình Phước,11.7511,106.7234,1026000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,47
+Tây Ninh,Tay Ninh,72,Tây Ninh,72,Tây Ninh,11.3351,106.0985,1150000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,48
+Bình Dương,Binh Duong,74,Bình Dương,74,Bình Dương,11.3254,106.477,2426561,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,49
+Đồng Nai,Dong Nai,75,Đồng Nai,75,Đồng Nai,11.0686,107.1676,3097107,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,50
+Bà Rịa - Vũng Tàu,Ba Ria-Vung Tau,77,Bà Rịa - Vũng Tàu,77,Bà Rịa - Vũng Tàu,10.5417,107.2429,1148000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,51
+Long An,Long An,80,Long An,80,Long An,10.6956,106.2431,1688800,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,52
+Tiền Giang,Tien Giang,82,Tiền Giang,82,Tiền Giang,10.4493,106.342,1764185,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,53
+Bến Tre,Ben Tre,83,Bến Tre,83,Bến Tre,10.2433,106.3757,1260000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,54
+Trà Vinh,Tra Vinh,84,Trà Vinh,84,Trà Vinh,9.8127,106.2992,1015000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,55
+Vĩnh Long,Vinh Long,86,Vĩnh Long,86,Vĩnh Long,10.2397,105.9571,1030000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,56
+Đồng Tháp,Dong Thap,87,Đồng Tháp,87,Đồng Tháp,10.4938,105.6881,1676000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,57
+An Giang,An Giang,89,An Giang,89,An Giang,10.5215,105.1258,2153000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,58
+Kiên Giang,Kien Giang,91,Kiên Giang,91,Kiên Giang,10.0125,105.0808,1800000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,59
+Hậu Giang,Hau Giang,93,Hậu Giang,93,Hậu Giang,9.7579,105.6412,769700,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,60
+Sóc Trăng,Soc Trang,94,Sóc Trăng,94,Sóc Trăng,9.6025,105.9739,1295000,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,61
+Bạc Liêu,Bac Lieu,95,Bạc Liêu,95,Bạc Liêu,9.2515,105.7244,907236,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,62
+Cà Mau,Ca Mau,96,Cà Mau,96,Cà Mau,9.1526,105.196,1217100,,province,FALSE,TRUE,Asia/Ho_Chi_Minh,,,63
+Ba Đình,Ba Dinh,01,Hà Nội,01001,Ba Đình,21.0341,105.8195,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,64
+Hoàn Kiếm,Hoan Kiem,01,Hà Nội,01002,Hoàn Kiếm,21.0285,105.8542,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,65
+Đống Đa,Dong Da,01,Hà Nội,01003,Đống Đa,21.0145,105.8253,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,66
+Hai Bà Trưng,Hai Ba Trung,01,Hà Nội,01004,Hai Bà Trưng,21.0068,105.8492,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,67
+Cầu Giấy,Cau Giay,01,Hà Nội,01005,Cầu Giấy,21.0333,105.7942,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,68
+Thanh Xuân,Thanh Xuan,01,Hà Nội,01006,Thanh Xuân,20.9952,105.8066,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,69
+Tây Hồ,Tay Ho,01,Hà Nội,01007,Tây Hồ,21.0686,105.8236,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,70
+Long Biên,Long Bien,01,Hà Nội,01008,Long Biên,21.0364,105.8938,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,71
+Hoàng Mai,Hoang Mai,01,Hà Nội,01009,Hoàng Mai,20.9811,105.8468,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,72
+Hà Đông,Ha Dong,01,Hà Nội,01010,Hà Đông,20.9721,105.769,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,73
+Nam Từ Liêm,Nam Tu Liem,01,Hà Nội,01011,Nam Từ Liêm,21.0122,105.7578,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,74
+Bắc Từ Liêm,Bac Tu Liem,01,Hà Nội,01012,Bắc Từ Liêm,21.0642,105.7698,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,75
+Quận 1,District 1,79,Hồ Chí Minh,79001,Quận 1,10.7756,106.7019,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,76
+Quận 2,District 2,79,Hồ Chí Minh,79002,Quận 2,10.7829,106.7436,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,77
+Quận 3,District 3,79,Hồ Chí Minh,79003,Quận 3,10.7829,106.6927,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,78
+Quận 4,District 4,79,Hồ Chí Minh,79004,Quận 4,10.7622,106.7035,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,79
+Quận 5,District 5,79,Hồ Chí Minh,79005,Quận 5,10.7545,106.6668,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,80
+Quận 6,District 6,79,Hồ Chí Minh,79006,Quận 6,10.7493,106.635,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,81
+Quận 7,District 7,79,Hồ Chí Minh,79007,Quận 7,10.7332,106.7232,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,82
+Quận 8,District 8,79,Hồ Chí Minh,79008,Quận 8,10.738,106.6759,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,83
+Quận 9,District 9,79,Hồ Chí Minh,79009,Quận 9,10.8418,106.8034,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,84
+Quận 10,District 10,79,Hồ Chí Minh,79010,Quận 10,10.7728,106.6703,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,85
+Quận 11,District 11,79,Hồ Chí Minh,79011,Quận 11,10.7629,106.6507,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,86
+Quận 12,District 12,79,Hồ Chí Minh,79012,Quận 12,10.8637,106.6709,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,87
+Bình Thạnh,Binh Thanh,79,Hồ Chí Minh,79013,Bình Thạnh,10.8099,106.7142,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,88
+Gò Vấp,Go Vap,79,Hồ Chí Minh,79014,Gò Vấp,10.8378,106.6669,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,89
+Phú Nhuận,Phu Nhuan,79,Hồ Chí Minh,79015,Phú Nhuận,10.798,106.6826,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,90
+Tân Bình,Tan Binh,79,Hồ Chí Minh,79016,Tân Bình,10.8006,106.6518,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,91
+Tân Phú,Tan Phu,79,Hồ Chí Minh,79017,Tân Phú,10.781,106.6296,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,92
+Bình Tân,Binh Tan,79,Hồ Chí Minh,79018,Bình Tân,10.7395,106.6054,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,93
+Thủ Đức,Thu Duc,79,Hồ Chí Minh,79019,Thủ Đức,10.8505,106.7619,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,94
+Hải Châu,Hai Chau,48,Đà Nẵng,48001,Hải Châu,16.0471,108.2068,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,95
+Thanh Khê,Thanh Khe,48,Đà Nẵng,48002,Thanh Khê,16.0617,108.1833,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,96
+Sơn Trà,Son Tra,48,Đà Nẵng,48003,Sơn Trà,16.0881,108.2431,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,97
+Ngũ Hành Sơn,Ngu Hanh Son,48,Đà Nẵng,48004,Ngũ Hành Sơn,16.0007,108.2507,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,98
+Liên Chiểu,Lien Chieu,48,Đà Nẵng,48005,Liên Chiểu,16.0764,108.1516,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,99
+Cẩm Lệ,Cam Le,48,Đà Nẵng,48006,Cẩm Lệ,16.0244,108.1765,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,100
+Hòa Vang,Hoa Vang,48,Đà Nẵng,48007,Hòa Vang,16.0431,108.0847,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,101
+Ninh Kiều,Ninh Kieu,92,Cần Thơ,92001,Ninh Kiều,10.0339,105.7875,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,102
+Bình Thủy,Binh Thuy,92,Cần Thơ,92002,Bình Thủy,10.0831,105.765,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,103
+Cái Răng,Cai Rang,92,Cần Thơ,92003,Cái Răng,10.0122,105.7914,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,104
+Ô Môn,O Mon,92,Cần Thơ,92004,Ô Môn,10.1191,105.6281,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,105
+Thốt Nốt,Thot Not,92,Cần Thơ,92005,Thốt Nốt,10.2889,105.4986,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,106
+Hồng Bàng,Hong Bang,31,Hải Phòng,31001,Hồng Bàng,20.8606,106.6817,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,107
+Lê Chân,Le Chan,31,Hải Phòng,31002,Lê Chân,20.8333,106.6831,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,108
+Ngô Quyền,Ngo Quyen,31,Hải Phòng,31003,Ngô Quyền,20.8569,106.7056,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,109
+Kiến An,Kien An,31,Hải Phòng,31004,Kiến An,20.7853,106.6064,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,110
+Hải An,Hai An,31,Hải Phòng,31005,Hải An,20.8692,106.7303,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,111
+Dương Kinh,Duong Kinh,31,Hải Phòng,31006,Dương Kinh,20.7072,106.5689,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,112
+Đồ Sơn,Do Son,31,Hải Phòng,31007,Đồ Sơn,20.7153,106.7903,,,district,FALSE,TRUE,Asia/Ho_Chi_Minh,,,113
