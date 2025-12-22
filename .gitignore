@@ -9,7 +9,7 @@ __pycache__/
 # Ignore Docker volumes & build files
 *.log
 docker/airflow/logs/
-data/
+data/*
 postgres-data/
 kafka-data/
 
