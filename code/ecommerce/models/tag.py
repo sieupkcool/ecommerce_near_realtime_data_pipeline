@@ -14,7 +14,7 @@ class Tag:
         self.conn.close()
 
     def generate_tags(self, num_tags):
-        fake = Faker()
+        fake = Faker('vi_VN')
         try:
             unique_tags = set()
             while len(unique_tags) < num_tags:

@@ -145,7 +145,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orders TO bronze.orders
     COALESCE(order_status_id, 0) AS order_status_id, -- Gán 0 nếu status là null
     shipping_method_id,
     shipping_status_id,
-    fromUnixTimestamp64Milli(created_at) AS created_at
+    fromUnixTimestamp64Milli(created_at) - INTERVAL 7 HOUR AS created_at
 FROM bronze.kafka_orders
 WHERE id IS NOT NULL;
 
@@ -306,7 +306,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_users TO bronze.users
 ) AS SELECT
     id,
     trim(COALESCE(username, 'người dùng ẩn')) AS username,
-    fromUnixTimestamp64Milli(created_at) AS created_at,
+    fromUnixTimestamp64Milli(created_at) - INTERVAL 7 HOUR AS created_at,
     now() as ttl
 FROM bronze.kafka_users
 WHERE id IS NOT NULL;
@@ -664,8 +664,8 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_discounts TO bronze.discounts
     trim(lower(COALESCE(type, 'không rõ'))) AS type,
     trim(COALESCE(value, '0')) AS value,
     trim(upper(COALESCE(code, 'NOCODE'))) AS code,
-    fromUnixTimestamp64Milli(intDiv(started_at, 1000)) AS started_at,
-    fromUnixTimestamp64Milli(intDiv(expired_at, 1000)) AS expired_at
+    fromUnixTimestamp64Milli(started_at) - INTERVAL 7 HOUR AS started_at,
+    fromUnixTimestamp64Milli(expired_at) - INTERVAL 7 HOUR AS expired_at
 FROM bronze.kafka_discounts
 WHERE id IS NOT NULL;
 
@@ -895,7 +895,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orderdetails TO bronze.orderdet
     toDecimal64OrNull(product_price, 2) AS product_price,
     toDecimal64OrNull(product_tax, 2) AS product_tax,
     toDecimal64OrNull(subtotal_amount, 2) AS subtotal_amount,
-    fromUnixTimestamp64Milli(created_at) AS created_at 
+    fromUnixTimestamp64Milli(created_at) - INTERVAL 7 HOUR AS created_at
 FROM bronze.kafka_orderdetails
 -- Lọc dữ liệu rác
 WHERE

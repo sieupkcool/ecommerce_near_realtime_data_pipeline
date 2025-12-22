@@ -3,12 +3,12 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.datasets import Dataset # <-- THÊM DÒNG NÀY
 
-from ecommerce.models.category import Category
 
 # ĐỊNH NGHĨA MỘT DATASET
 CATEGORY_DATASET = Dataset("ecommerce://category")
 
 def generate_category_data(num_cats=1):
+    from ecommerce.models.category import Category
     Instance = Category()
     Instance.generate_fake_categories(num_cats)
 

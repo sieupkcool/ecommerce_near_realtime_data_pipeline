@@ -15,12 +15,13 @@ class PaymentMethods:
     def generate_payment_methods(self):
         try:
             methods = [
-                "Credit Card",
-                "Debit Card",
-                "PayPal",
-                "Bank Transfer",
-                "Cash on Delivery"
+                "Thẻ tín dụng",
+                "Thẻ ghi nợ",
+                "Ví điện tử",
+                "Chuyển khoản ngân hàng",
+                "Thanh toán khi nhận hàng"
             ]
+
 
             method_data = [(method,) for method in methods]
 

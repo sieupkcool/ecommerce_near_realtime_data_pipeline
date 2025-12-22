@@ -3,13 +3,10 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.sensors.python import PythonSensor
 
-from ecommerce.models.user import User
-from ecommerce.models.role_user import RoleUser
-from ecommerce.models.address import Address
-from ecommerce.models.city import City
 
 
 def check_cities_exist_callable():
+    from ecommerce.models.city import City
     city_instance = City()
     exists = city_instance.has_cities()
     if exists:
@@ -20,16 +17,19 @@ def check_cities_exist_callable():
         return False
 
 def user_info(num_users=1, execution_date_str=None):
+    from ecommerce.models.user import User
     instance = User()
     instance.generate_fake_users(num_users=num_users, execution_date_str=execution_date_str)
 
 
 def user_address():
+    from ecommerce.models.address import Address
     instance = Address()
     instance.generate_addresses()
 
 
 def assign_role():
+    from ecommerce.models.role_user import RoleUser
     instance = RoleUser()
     instance.assign_roles_to_users()
 
@@ -63,7 +63,7 @@ with DAG('ecommerce_user_registration',
         python_callable=check_cities_exist_callable,
         poke_interval=30, 
         timeout=900,      
-        mode="poke"
+        mode="reschedule"
     )
 
     generate_user_info = PythonOperator(

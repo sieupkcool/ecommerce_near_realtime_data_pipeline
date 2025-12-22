@@ -53,8 +53,9 @@ class OrderRegistration(object):
         # credit card (30%), debit card (5%), paypal (5%), bank transfer (10%), COD (50%)
         weights_payment = [0.30, 0.05, 0.05, 0.10, 0.50] 
 
-        self.cur.execute("SELECT id FROM shippingmethods")
+        self.cur.execute("SELECT id FROM shippingmethods ORDER BY id ASC")
         shipping_methods = [row[0] for row in self.cur.fetchall()]
+        weights_shipping = [0.50, 0.15, 0.05, 0.25, 0.05]
         
         self.cur.execute("SELECT id FROM orderstatus WHERE order_status_name='Pending'")
         pending_status_id = self.cur.fetchone()[0]
@@ -75,7 +76,7 @@ class OrderRegistration(object):
             customer_id, address_id = random.choice(valid_customers)
             staff_id = random.choice(valid_staffs)
             payment_id = random.choices(payment_ids, weights=weights_payment, k=1)[0]
-            shipping_id = random.choice(shipping_methods)
+            shipping_id = random.choices(shipping_methods, weights=weights_shipping, k=1)[0]
             
             num_prods = random.randint(1, 5)
             selected_prods = random.sample(valid_products, min(num_prods, len(valid_products)))

@@ -10,11 +10,13 @@ class User(object):
     def __init__(self):
         self.conn = psycopg2.connect(**db_config)
         self.cur = self.conn.cursor()
-        self.fake = Faker()
+        self.fake = Faker('vi_VN')
 
     def __del__(self):
-        self.cur.close()
-        self.conn.close()
+        if hasattr(self, 'cur') and self.cur:
+            self.cur.close()
+        if hasattr(self, 'conn') and self.conn:
+            self.conn.close()
 
     def generate_fake_users(self, num_users=1, execution_date_str=None):
         try:
@@ -25,21 +27,39 @@ class User(object):
             else:
                 run_date = datetime.datetime.now()
 
+            print(f"Bắt đầu tạo {num_users} user cho ngày {run_date}...")
+
             for _ in range(num_users):
                 username = self.fake.user_name()
                 password = hashlib.sha256(self.fake.password().encode('utf-8')).hexdigest()
                 email = self.fake.email()
                 mobile = self.fake.phone_number()
                 created_at = self.fake.date_time_between(start_date='-1y', end_date=run_date)
-                user_data.append((username, password, email, mobile, created_at))
+                
+                # Đảm bảo dữ liệu không bị None
+                if username and email and mobile:
+                    user_data.append((username, password, email, mobile, created_at))
 
-            query = "INSERT INTO users (username, password, email, mobile, created_at) VALUES %s RETURNING id"
-            execute_values(self.cur, query, user_data)
-            self.conn.commit()
+            # SỬA 1: Thêm ON CONFLICT DO NOTHING để bỏ qua các dòng trùng lặp (email/username)
+            # SỬA 2: Bỏ RETURNING id vì execute_values không xử lý return mặc định
+            query = """
+                INSERT INTO users (username, password, email, mobile, created_at) 
+                VALUES %s 
+                ON CONFLICT DO NOTHING
+            """
+            
+            if user_data:
+                execute_values(self.cur, query, user_data)
+                self.conn.commit()
+                print(f"Đã insert thành công {len(user_data)} users (đã trừ các dòng trùng lặp).")
+            else:
+                print("Không có user nào được tạo.")
 
-        except psycopg2.Error as e:
+        except Exception as e:
             self.conn.rollback()
-            print(f"Error while generating users: {e}")
+            print(f"LỖI NGHIÊM TRỌNG khi tạo users: {e}")
+            # SỬA 3: Bắt buộc phải RAISE lỗi để Airflow biết mà đánh dấu Failed
+            raise e
     
     def has_customer_user(self):
         try:

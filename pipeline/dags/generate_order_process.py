@@ -3,15 +3,13 @@ import random
 
 from airflow import AirflowException
 
-from ecommerce.models.order import OrderRegistration
-from ecommerce.models.transaction import Transaction
-from ecommerce.models.user import User
 
 from airflow.decorators import dag, task
 
 from airflow.sensors.python import PythonSensor
 
 def check_customer_user_exists():
+    from ecommerce.models.user import User
     user_instance = User()
     exists = user_instance.has_customer_user()
     if exists:
@@ -35,11 +33,12 @@ def order_process():
         python_callable=check_customer_user_exists,
         poke_interval=15,
         timeout=600,
-        mode="poke"
+        mode="reschedule"
     )
 
     @task(retries=5, retry_delay=timedelta(minutes=5))
     def generate_order_process(execution_date_str: str):
+        from ecommerce.models.order import OrderRegistration
 
         run_date = datetime.strptime(execution_date_str, '%Y-%m-%d')
         
@@ -62,6 +61,7 @@ def order_process():
 
     @task(retries=5, retry_delay=timedelta(minutes=5))
     def generate_transaction_for_order(order_ids):
+        from ecommerce.models.transaction import Transaction
         transaction = Transaction()
         transaction.generate_bulk_transactions(order_ids)
 

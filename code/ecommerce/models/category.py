@@ -27,24 +27,24 @@ class Category:
 
     def generate_fake_categories(self, num_categories=None):
         ecommerce_categories = {
-            "Electronics": ["Smartphones", "Laptops", "Tablets", "Accessories"],
-            "Men's Fashion": ["Clothing", "Shoes", "Watches", "Accessories"],
-            "Women's Fashion": ["Dresses", "Handbags", "Jewelry", "Shoes"],
-            "Home & Living": ["Furniture", "Decoration", "Kitchenware", "Bedding"],
-            "Beauty": ["Skincare", "Makeup", "Fragrance", "Tools"],
-            "Health": ["Supplements", "Medical Supplies", "First Aid"],
-            "Sports & Outdoors": ["Gym Equipment", "Team Sports", "Camping", "Cycling"],
-            "Toys & Hobbies": ["Action Figures", "Board Games", "Electronic Toys"],
-            "Baby & Kids": ["Diapers", "Baby Gear", "Nursing", "Kids Clothing"],
-            "Automotive": ["Car Electronics", "Car Care", "Moto Accessories"],
-            "Books": ["Fiction", "Non-Fiction", "Education", "Comics"],
-            "Stationery": ["Writing", "Paper Products", "Office Supplies"],
-            "Groceries": ["Snacks", "Beverages", "Cooking Essentials"],
-            "Pet Supplies": ["Dog Food", "Cat Food", "Pet Toys"],
-            "Appliances": ["Large Appliances", "Small Kitchen Appliances", "Vacuums"],
-            "Garden": ["Plants", "Gardening Tools", "Outdoor Decor"],
-            "Musical Instruments": ["Guitars", "Keyboards", "Drums"],
-            "Tools & Hardware": ["Power Tools", "Hand Tools", "Safety Gear"]
+            "Điện tử": ["Điện thoại", "Máy tính xách tay", "Máy tính bảng", "Phụ kiện điện tử"],
+            "Thời trang nam": ["Quần áo", "Giày dép", "Đồng hồ", "Phụ kiện nam"],
+            "Thời trang nữ": ["Váy đầm", "Túi xách", "Trang sức", "Giày cao gót"],
+            "Nhà cửa & Đời sống": ["Nội thất", "Trang trí", "Dụng cụ nhà bếp", "Chăn ga gối đệm"],
+            "Sắc đẹp": ["Chăm sóc da", "Trang điểm", "Nước hoa", "Dụng cụ làm đẹp"],
+            "Sức khỏe": ["Thực phẩm chức năng", "Dụng cụ y tế", "Sơ cứu"],
+            "Thể thao & Dã ngoại": ["Dụng cụ tập gym", "Thể thao đồng đội", "Cắm trại", "Xe đạp"],
+            "Đồ chơi & Sở thích": ["Mô hình", "Board Games", "Đồ chơi điện tử"],
+            "Mẹ & Bé": ["Tã bỉm", "Xe đẩy", "Đồ dùng cho bé", "Thời trang trẻ em"],
+            "Ô tô & Xe máy": ["Phụ kiện ô tô", "Chăm sóc xe", "Phụ kiện xe máy"],
+            "Sách": ["Tiểu thuyết", "Sách phi hư cấu", "Giáo dục", "Truyện tranh"],
+            "Văn phòng phẩm": ["Dụng cụ viết", "Sản phẩm giấy", "Đồ dùng văn phòng"],
+            "Bách hóa": ["Đồ ăn vặt", "Đồ uống", "Gia vị & Nấu ăn"],
+            "Thú cưng": ["Thức ăn cho chó", "Thức ăn cho mèo", "Đồ chơi thú cưng"],
+            "Thiết bị gia dụng": ["Thiết bị lớn", "Thiết bị nhà bếp nhỏ", "Máy hút bụi"],
+            "Sân vườn": ["Cây cảnh", "Dụng cụ làm vườn", "Trang trí ngoài trời"],
+            "Nhạc cụ": ["Guitar", "Keyboard", "Trống"],
+            "Công cụ & Phần cứng": ["Dụng cụ điện", "Dụng cụ cầm tay", "Đồ bảo hộ"]
         }
 
         try:

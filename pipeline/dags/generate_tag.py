@@ -2,10 +2,10 @@ from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-from ecommerce.models.tag import Tag
 
 
 def generate_tag_data(num_brands=1):
+    from ecommerce.models.tag import Tag
     Instance = Tag()
     Instance.generate_tags(num_brands)
 

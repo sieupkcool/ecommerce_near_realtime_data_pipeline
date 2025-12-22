@@ -15,12 +15,13 @@ class ShippingMethods:
     def generate_shipping_methods(self):
         try:
             methods = [
-                "Standard Shipping",
-                "Express Shipping",
-                "Next-Day Delivery",
-                "Free Shipping",
-                "Pickup from Store"
+                "Giao hàng tiêu chuẩn",
+                "Giao hàng nhanh",
+                "Giao hàng trong ngày",
+                "Miễn phí vận chuyển",
+                "Nhận tại cửa hàng"
             ]
+
 
             method_data = [(method,) for method in methods]
 

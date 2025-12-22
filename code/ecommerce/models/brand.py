@@ -14,7 +14,7 @@ class Brand(object):
         self.conn.close()
 
     def generate_fake_brands(self, num_brands=1):
-        fake = Faker()
+        fake = Faker('vi_VN')
         try:
             brand_data = [(fake.company(),) for _ in range(num_brands)]
             query = "INSERT INTO brands (brand_name) VALUES %s"

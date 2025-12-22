@@ -3,11 +3,11 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.datasets import Dataset 
 
-from ecommerce.models.brand import Brand
 
 BRAND_DATASET = Dataset("ecommerce://brand")
 
 def generate_brand_data(num_brands=1):
+    from ecommerce.models.brand import Brand
     Instance = Brand()
     Instance.generate_fake_brands(num_brands)
 

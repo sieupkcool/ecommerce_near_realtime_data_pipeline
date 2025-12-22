@@ -14,7 +14,7 @@ x-common: &airflow-common
     - ./data/airflow/config:/opt/airflow/config
     - ./data/airflow/plugins:/opt/airflow/plugins
     - ./data/airflow/data:/data
-    - ./data/uscities.csv:/opt/airflow/data/uscities.csv
+    - ./data/vncities.csv:/opt/airflow/data/vncities.csv
   networks:
     - services
 
@@ -44,6 +44,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    environment:
+      AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 300
     restart: always
     depends_on:
       airflow-init:
@@ -286,7 +288,7 @@ services:
       - .env
     volumes:
       - clickhouse-data:/var/lib/clickhouse/
-      - ./database/clickhouse_tables.sql:/docker-entrypoint-initdb.d/clickhouse_tables.sql
+      - ./database/clickhouse_scripts/:/docker-entrypoint-initdb.d/
     networks:
       - services
     depends_on:
@@ -303,48 +305,49 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 120s
 
-  postgres-metabase:
-    image: postgres:16-alpine
-    container_name: postgres-metabase
-    hostname: postgres-metabase
-    environment:
-      POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: metabase
-      POSTGRES_DB: metabase
-    volumes:
-      - metabase-postgres-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "metabase"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - services
-    restart: unless-stopped
+  # postgres-metabase:
+  #   image: postgres:16-alpine
+  #   container_name: postgres-metabase
+  #   hostname: postgres-metabase
+  #   environment:
+  #     POSTGRES_USER: metabase
+  #     POSTGRES_PASSWORD: metabase
+  #     POSTGRES_DB: metabase
+  #   volumes:
+  #     - metabase-postgres-volume:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "metabase"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - services
+  #   restart: unless-stopped
 
-  metabase:
-    image: metabase/metabase:v0.57.5.x
-    container_name: metabase
-    hostname: metabase
-    ports:
-      - "3000:3000"
-    environment:
-      # Metabase app DB (Postgres)
-      MB_DB_TYPE: postgres
-      MB_DB_HOST: postgres-metabase
-      MB_DB_PORT: 5432
-      MB_DB_DBNAME: metabase
-      MB_DB_USER: metabase
-      MB_DB_PASS: metabase
-    depends_on:
-      postgres-metabase:
-        condition: service_healthy
-      clickhouse:
-        condition: service_healthy
-    networks:
-      - services
-    restart: unless-stopped
+  # metabase:
+  #   image: metabase/metabase:v0.57.5.x
+  #   container_name: metabase
+  #   hostname: metabase
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     # Metabase app DB (Postgres)
+  #     MB_DB_TYPE: postgres
+  #     MB_DB_HOST: postgres-metabase
+  #     MB_DB_PORT: 5432
+  #     MB_DB_DBNAME: metabase
+  #     MB_DB_USER: metabase
+  #     MB_DB_PASS: metabase
+  #   depends_on:
+  #     postgres-metabase:
+  #       condition: service_healthy
+  #     clickhouse:
+  #       condition: service_healthy
+  #   networks:
+  #     - services
+  #   restart: unless-stopped
 
 volumes:
   airflow-postgres-volume:

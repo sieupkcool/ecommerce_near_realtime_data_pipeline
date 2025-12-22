@@ -2,16 +2,16 @@ from datetime import timedelta, datetime
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from ecommerce.models.province import Province
-from ecommerce.models.city import City
 
 
 def generate_provinces():
+    from ecommerce.models.province import Province
     Instance = Province()
     Instance.generate_us_states()
 
 
 def generate_cities():
+    from ecommerce.models.city import City
     Instance = City()
     Instance.generate_cities_for_provinces()
 

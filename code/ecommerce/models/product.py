@@ -8,7 +8,7 @@ class Product:
     def __init__(self):
         self.conn = psycopg2.connect(**db_config)
         self.cur = self.conn.cursor()
-        self.fake = Faker()
+        self.fake = Faker('vi_VN')
 
     def __del__(self):
         self.cur.close()
@@ -34,80 +34,80 @@ class Product:
             # --- KHO DỮ LIỆU TỔ HỢP (COMBINATORIAL DATA) ---
             
             product_recipes = {
-                "Electronic": {
-                    "prefixes": ["Smart", "Ultra", "Pro", "Gaming", "Wireless", "Portable", "High-Performance", "Compact"],
-                    "bases": ["Smartphone", "Laptop", "Tablet", "Monitor", "Keyboard", "Mouse", "Headphones", "Speaker", "Smartwatch", "Drone", "Camera"],
-                    "suffixes": ["X1", "Pro Max", "Lite", "5G", "Gen 2", "RGB", "Elite", "Series 7", "Ultra Slim", "Noise Cancelling"],
-                    "price": (50, 3000)
+                "Điện tử": {
+                    "prefixes": ["Thông minh", "Ultra", "Pro", "Gaming", "Không dây", "Di động", "Hiệu năng cao", "Nhỏ gọn"],
+                    "bases": ["Điện thoại", "Laptop", "Máy tính bảng", "Màn hình", "Bàn phím", "Chuột", "Tai nghe", "Loa", "Đồng hồ thông minh", "Flycam", "Máy ảnh"],
+                    "suffixes": ["X1", "Pro Max", "Lite", "5G", "Thế hệ 2", "RGB", "Elite", "Series 7", "Siêu mỏng", "Chống ồn"],
+                    "price": (1250000, 75000000)
                 },
-                "Fashion": {
-                    "prefixes": ["Cotton", "Slim-Fit", "Vintage", "Leather", "Casual", "Formal", "Summer", "Winter", "Luxury", "Designer"],
-                    "bases": ["T-Shirt", "Jeans", "Jacket", "Suit", "Dress", "Sneakers", "Boots", "Handbag", "Scarf", "Sunglasses", "Watch"],
-                    "suffixes": ["Classic", "Limited Edition", "Comfort", "Sport", "Urban Style", "Elegant", "Premium", "Trend 2025"],
-                    "price": (20, 500)
+                "Thời trang": {
+                    "prefixes": ["Vải Cotton", "Dáng ôm", "Cổ điển", "Da thật", "Thường ngày", "Trang trọng", "Mùa hè", "Mùa đông", "Sang trọng", "Thiết kế"],
+                    "bases": ["Áo thun", "Quần Jeans", "Áo khoác", "Bộ Vest", "Váy", "Giày Sneakers", "Giày Boots", "Túi xách", "Khăn choàng", "Kính râm", "Đồng hồ"],
+                    "suffixes": ["Classic", "Phiên bản giới hạn", "Thoải mái", "Thể thao", "Phong cách phố thị", "Thanh lịch", "Cao cấp", "Xu hướng 2025"],
+                    "price": (500000, 12500000)
                 },
-                "Home": {
-                    "prefixes": ["Modern", "Wooden", "Ceramic", "Glass", "Ergonomic", "Smart", "Minimalist", "Cozy", "Luxury"],
-                    "bases": ["Sofa", "Chair", "Table", "Lamp", "Bed", "Rug", "Curtain", "Shelf", "Vase", "Mirror", "Desk"],
-                    "suffixes": ["Living", "Deco", "Soft Touch", "Adjustable", "King Size", "Set", "Organizer"],
-                    "price": (30, 1500)
+                "Nhà cửa": {
+                    "prefixes": ["Hiện đại", "Bằng gỗ", "Gốm sứ", "Thủy tinh", "Công thái học", "Thông minh", "Tối giản", "Ấm cúng", "Sang trọng"],
+                    "bases": ["Ghế Sofa", "Ghế", "Bàn", "Đèn", "Giường", "Thảm", "Rèm cửa", "Kệ sách", "Bình hoa", "Gương", "Bàn làm việc"],
+                    "suffixes": ["Phòng khách", "Decor", "Mềm mại", "Có thể điều chỉnh", "Cỡ King", "Bộ", "Sắp xếp"],
+                    "price": (750000, 37500000)
                 },
-                "Beauty": {
-                    "prefixes": ["Natural", "Organic", "Matte", "Glossy", "Hydrating", "Anti-Aging", "Vitamin C", "Night", "Daily"],
-                    "bases": ["Lipstick", "Foundation", "Cream", "Serum", "Shampoo", "Perfume", "Face Mask", "Cleanser", "Sunscreen"],
-                    "suffixes": ["Repair", "Glow", "Essence", "No.5", "Care", "Therapy", "Revitalizing"],
-                    "price": (10, 200)
+                "Làm đẹp": {
+                    "prefixes": ["Tự nhiên", "Hữu cơ", "Dạng lì", "Bóng", "Dưỡng ẩm", "Chống lão hóa", "Vitamin C", "Ban đêm", "Hàng ngày"],
+                    "bases": ["Son môi", "Kem nền", "Kem dưỡng", "Serum", "Dầu gội", "Nước hoa", "Mặt nạ", "Sữa rửa mặt", "Kem chống nắng"],
+                    "suffixes": ["Phục hồi", "Rạng rỡ", "Tinh chất", "No.5", "Chăm sóc", "Trị liệu", "Tái tạo"],
+                    "price": (250000, 5000000)
                 },
-                "Sport": {
-                    "prefixes": ["Pro", "Training", "Outdoor", "Running", "Heavy Duty", "Lightweight", "Athletic", "Performance"],
-                    "bases": ["Yoga Mat", "Dumbbell", "Treadmill", "Bicycle", "Tennis Racket", "Running Shoes", "Gym Bag", "Water Bottle"],
-                    "suffixes": ["Gear", "Flex", "Speed", "Endurance", "X-Treme", "Active"],
-                    "price": (15, 800)
+                "Thể thao": {
+                    "prefixes": ["Chuyên nghiệp", "Tập luyện", "Ngoài trời", "Chạy bộ", "Siêu bền", "Siêu nhẹ", "Thể thao", "Hiệu suất"],
+                    "bases": ["Thảm Yoga", "Tạ tay", "Máy chạy bộ", "Xe đạp", "Vợt Tennis", "Giày chạy bộ", "Túi tập gym", "Bình nước"],
+                    "suffixes": ["Thiết bị", "Co giãn", "Tốc độ", "Bền bỉ", "X-Treme", "Năng động"],
+                    "price": (375000, 20000000)
                 },
-                "Toy": {
-                    "prefixes": ["Lego", "Plush", "Remote Control", "Educational", "Puzzle", "Action", "Board", "Creative"],
-                    "bases": ["Car", "Robot", "Doll", "Figure", "Game Set", "Blocks", "Drone", "Train"],
-                    "suffixes": ["Adventure", "Heroes", "Collector Edition", "Fun Pack", "Kids"],
-                    "price": (10, 150)
+                "Đồ chơi": {
+                    "prefixes": ["Lego", "Thú bông", "Điều khiển từ xa", "Giáo dục", "Xếp hình", "Hành động", "Board Game", "Sáng tạo"],
+                    "bases": ["Xe hơi", "Robot", "Búp bê", "Mô hình", "Bộ trò chơi", "Khối lắp ráp", "Flycam", "Tàu hỏa"],
+                    "suffixes": ["Phiêu lưu", "Anh hùng", "Phiên bản sưu tầm", "Gói vui nhộn", "Trẻ em"],
+                    "price": (250000, 3750000)
                 },
-                "Book": {
-                    "prefixes": ["The Art of", "Guide to", "History of", "Modern", "Advanced", "Complete", "Daily", "Mystery of"],
-                    "bases": ["Python Programming", "Cooking", "Philosophy", "Novel", "Economics", "Psychology", "Science", "Design"],
-                    "suffixes": ["Volume 1", "Beginner's Guide", "Masterclass", "Handbook", "Best Seller"],
-                    "price": (5, 80)
+                "Sách": {
+                    "prefixes": ["Nghệ thuật của", "Hướng dẫn về", "Lịch sử của", "Hiện đại", "Nâng cao", "Toàn tập", "Hàng ngày", "Bí ẩn của"],
+                    "bases": ["Lập trình Python", "Nấu ăn", "Triết học", "Tiểu thuyết", "Kinh tế", "Tâm lý học", "Khoa học", "Thiết kế"],
+                    "suffixes": ["Tập 1", "Hướng dẫn cho người mới", "Khóa học chuyên sâu", "Sổ tay", "Bán chạy nhất"],
+                    "price": (125000, 2000000)
                 },
-                "Automotive": {
-                    "prefixes": ["Car", "Motorcycle", "Premium", "Heavy Duty", "Portable", "Automatic"],
-                    "bases": ["Vacuum Cleaner", "Phone Mount", "Seat Cover", "Wax", "Tire Inflator", "LED Light", "Tool Kit"],
-                    "suffixes": ["Pro", "360", "Universal", "Cleaner", "Protection"],
-                    "price": (10, 200)
+                "Ô tô": {
+                    "prefixes": ["Xe hơi", "Xe máy", "Cao cấp", "Siêu bền", "Di động", "Tự động"],
+                    "bases": ["Máy hút bụi", "Giá đỡ điện thoại", "Bọc ghế", "Sáp bóng", "Máy bơm lốp", "Đèn LED", "Bộ dụng cụ"],
+                    "suffixes": ["Pro", "360", "Đa năng", "Làm sạch", "Bảo vệ"],
+                    "price": (250000, 5000000)
                 },
-                "Grocer": {
-                    "prefixes": ["Organic", "Fresh", "Premium", "Imported", "Natural", "Instant"],
-                    "bases": ["Coffee", "Tea", "Chocolate", "Olive Oil", "Pasta", "Rice", "Snacks", "Honey"],
-                    "suffixes": ["Pack", "500g", "1kg", "Flavor", "Box"],
-                    "price": (2, 50)
+                "Bách hóa": {
+                    "prefixes": ["Hữu cơ", "Tươi sống", "Hạng nhất", "Nhập khẩu", "Tự nhiên", "Ăn liền"],
+                    "bases": ["Cà phê", "Trà", "Socola", "Dầu Olive", "Mì ống", "Gạo", "Đồ ăn vặt", "Mật ong"],
+                    "suffixes": ["Gói", "500g", "1kg", "Hương vị", "Hộp"],
+                    "price": (50000, 1250000)
                 },
-                "Garden": {
-                    "prefixes": ["Outdoor", "Indoor", "Solar", "Metal", "Plastic"],
-                    "bases": ["Plant Pot", "Shovel", "Hose", "Light", "Chair", "Table", "Fountain"],
-                    "suffixes": ["Green", "Garden", "Tool"],
-                    "price": (10, 300)
+                "Sân vườn": {
+                    "prefixes": ["Ngoài trời", "Trong nhà", "Năng lượng mặt trời", "Kim loại", "Nhựa"],
+                    "bases": ["Chậu cây", "Xẻng", "Vòi nước", "Đèn", "Ghế", "Bàn", "Đài phun nước"],
+                    "suffixes": ["Xanh", "Sân vườn", "Dụng cụ"],
+                    "price": (250000, 7500000)
                 },
-                "Appliance": {
-                    "prefixes": ["Smart", "Digital", "Automatic", "Energy Saving", "Stainless Steel"],
-                    "bases": ["Fridge", "Washing Machine", "Microwave", "Blender", "Toaster", "Vacuum", "Air Fryer"],
-                    "suffixes": ["Inverter", "Touch", "Pro", "Home"],
-                    "price": (50, 2000)
+                "Gia dụng": {
+                    "prefixes": ["Thông minh", "Kỹ thuật số", "Tự động", "Tiết kiệm năng lượng", "Thép không gỉ"],
+                    "bases": ["Tủ lạnh", "Máy giặt", "Lò vi sóng", "Máy xay sinh tố", "Máy nướng bánh mì", "Máy hút bụi", "Nồi chiên không dầu"],
+                    "suffixes": ["Inverter", "Cảm ứng", "Pro", "Gia đình"],
+                    "price": (1250000, 50000000)
                 }
             }
             
             # Recipe mặc định nếu không khớp từ khóa nào
             default_recipe = {
-                "prefixes": ["Standard", "Premium", "Basic", "New"],
-                "bases": ["Item", "Product", "Tool", "Accessory", "Gadget"],
-                "suffixes": ["Plus", "V2", "Gold", "Original"],
-                "price": (10, 100)
+                "prefixes": ["Tiêu chuẩn", "Cao cấp", "Cơ bản", "Mới"],
+                "bases": ["Mặt hàng", "Sản phẩm", "Dụng cụ", "Phụ kiện", "Tiện ích"],
+                "suffixes": ["Plus", "V2", "Vàng", "Nguyên bản"],
+                "price": (250000, 2500000)
             }
 
             product_data = []
@@ -138,11 +138,15 @@ class Product:
                 min_p, max_p = recipe["price"]
                 product_price = round(random.uniform(min_p, max_p), 2)
                 
-                if any(x in product_name for x in ["Pro", "Ultra", "Luxury", "Elite", "Max"]):
-                    product_price = round(product_price * 1.5, 2)
-                
-                if any(x in product_name for x in ["Lite", "Mini", "Basic"]):
-                    product_price = round(product_price * 0.7, 2)
+                # 1. Kiểm tra các từ khóa cao cấp (Tăng giá 50%)
+                premium_keywords = ["Pro", "Ultra", "Luxury", "Elite", "Max", "Sang trọng", "Cao cấp", "Vàng", "Phiên bản giới hạn"]
+                if any(x in product_name for x in premium_keywords):
+                    product_price = round(product_price * 1.5, -3) # Làm tròn đến hàng nghìn
+
+                # 2. Kiểm tra các từ khóa giá rẻ (Giảm giá 30%)
+                budget_keywords = ["Lite", "Mini", "Basic", "Cơ bản", "Nhỏ gọn", "Thường ngày"]
+                if any(x in product_name for x in budget_keywords):
+                    product_price = round(product_price * 0.7, -3)
 
                 unit_cost = round(product_price * random.uniform(0.6, 0.85), 2)
                 product_tax = round(random.uniform(5.0, 12.0), 2)
@@ -151,11 +155,11 @@ class Product:
                 brand_id = random.choice(brand_ids) if brand_ids else None
                 
                 descriptions = [
-                    f"High quality {base} designed for daily use.",
-                    f"The all-new {product_name} features advanced technology.",
-                    f"Best in class {base} with durable materials.",
-                    f"Experience luxury with this authentic {product_name}.",
-                    f"Limited stock available for this {prefix} edition."
+                    f"{base} chất lượng cao, phù hợp cho nhu cầu sử dụng hằng ngày.",
+                    f"{product_name} với thiết kế hiện đại và công nghệ tiên tiến.",
+                    f"Sản phẩm {base} bền bỉ, được nhiều khách hàng tin dùng.",
+                    f"Trải nghiệm sự tiện nghi và đẳng cấp cùng {product_name}.",
+                    f"Số lượng có hạn cho phiên bản {prefix.lower()}."
                 ]
                 product_description = random.choice(descriptions)
                 

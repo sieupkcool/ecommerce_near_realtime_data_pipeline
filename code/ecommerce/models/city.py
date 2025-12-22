@@ -7,7 +7,7 @@ class City:
     def __init__(self):
         self.conn = psycopg2.connect(**db_config)
         self.cur = self.conn.cursor()
-        self.csv_path = '/opt/airflow/data/uscities.csv'
+        self.csv_path = '/opt/airflow/data/vncities.csv'
 
     def __del__(self):
         self.cur.close()

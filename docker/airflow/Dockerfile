@@ -15,7 +15,7 @@ RUN apt-get update \
 
 USER airflow
 
-RUN pip install --no-cache-dir faker geopy
+RUN pip install --no-cache-dir faker geopy clickhouse-driver
 
 ENV REDIS_HOST=${REDIS_HOST}
 ENV REDIS_PASSWORD=${REDIS_PASSWORD}
