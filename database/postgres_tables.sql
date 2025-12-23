@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users
     password varchar(255),
 	email varchar(255) NOT NULL unique,
 	mobile varchar(255) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS roles
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS roles
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	role_name varchar(50) NOT NULL UNIQUE,
 	role_title varchar(50) NOT NULL,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 
     UNIQUE(role_name, role_title)
 );
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS role_user
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	role_id integer NOT NULL,
 	user_id integer NOT NULL,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	UNIQUE(role_id, user_id),
 	FOREIGN KEY (user_id) REFERENCES users(id),
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS provinces
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	province_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS cities
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS cities
 	province_id integer NOT NULL,
     latitude numeric,
     longitude numeric,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 
     UNIQUE(city_name, province_id),
 	FOREIGN KEY (province_id) REFERENCES provinces(id)
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS addresses
 	province_id integer NOT NULL,
 	city_id integer NOT NULL,
 	full_address varchar(255),
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	FOREIGN KEY (user_id) REFERENCES users(id),
 	FOREIGN KEY (province_id) REFERENCES provinces(id),
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS categories
 	category_name varchar(100) NOT NULL,
 	category_id integer, -- to create parent/childe relationship (self-join)
 	slug varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	FOREIGN KEY (category_id) REFERENCES categories(id)
 );
@@ -82,14 +82,14 @@ CREATE TABLE IF NOT EXISTS brands
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	brand_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS tags
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	tag_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS products
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS products
 	product_tax numeric(4,2) NOT NULL DEFAULT 0,
 	product_quantity integer NOT NULL DEFAULT 0,
 	product_image_path varchar,
-	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	FOREIGN KEY (category_id) REFERENCES categories(id), 
 	FOREIGN KEY (brand_id) REFERENCES brands(id)
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS product_tag
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	product_id integer NOT NULL,
 	tag_id integer NOT NULL,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	UNIQUE(product_id, tag_id),
 	FOREIGN KEY (product_id) REFERENCES products(id), 
@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS adscampaigns
 	campaign_title varchar(255),
 	started_at timestamp,
 	expired_at timestamp,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TYPE discount_type AS ENUM ('percent', 'amount');
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS discounts
 	code varchar(100) UNIQUE,
 	started_at timestamp(0),
 	expired_at timestamp(0),
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	FOREIGN KEY (adscampaign_id) REFERENCES adscampaigns(id)
 );
 
@@ -152,35 +152,35 @@ CREATE TABLE IF NOT EXISTS orderstatus
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	order_status_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS paymentmethods
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	payment_method_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS paymentstatus
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	payment_status_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS shippingstatus
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	shipping_status_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS shippingmethods
 (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	shipping_method_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
 CREATE TABLE IF NOT EXISTS orders
@@ -200,8 +200,8 @@ CREATE TABLE IF NOT EXISTS orders
 	shipping_method_id integer,
 	shipping_status_id integer,
 	shipped_at timestamp(0),
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
+	updated_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	FOREIGN KEY (user_id) REFERENCES users(id),
 	FOREIGN KEY (staff_id) REFERENCES users(id),
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS order_status_history
 	order_status_id integer NOT NULL,
 	staff_id integer NOT NULL,
 	comments varchar(500),
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	UNIQUE(order_id, order_status_id),	
 	FOREIGN KEY (order_id) REFERENCES orders(id),
@@ -238,7 +238,7 @@ CREATE TABLE IF NOT EXISTS orderdetails
 	product_price numeric(15, 2) NOT NULL,
 	product_tax numeric(15, 2) NOT NULL,
 	subtotal_amount numeric(15, 2) NOT NULL,
-	created_at timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	FOREIGN KEY (order_id) REFERENCES orders(id),
 	FOREIGN KEY (product_id) REFERENCES products(id)
@@ -252,7 +252,7 @@ CREATE TABLE transactions(
     transaction_type transaction_type,
     amount NUMERIC(15, 2),
     status BOOLEAN DEFAULT FALSE,
-    created_at timestamp(0) DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamp(0) DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
     description TEXT
 );
 

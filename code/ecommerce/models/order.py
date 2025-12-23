@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from psycopg2.extras import execute_values
 from decimal import Decimal
 from ecommerce.config.database import db_config
+import pendulum
 
 
 class OrderRegistration(object):
@@ -111,7 +112,7 @@ class OrderRegistration(object):
             if execution_date_str:
                 created_at = base_date + timedelta(seconds=random.randint(0, 86399))
             else:
-                created_at = datetime.now()
+                created_at = pendulum.now("Asia/Ho_Chi_Minh").naive()
             
             # Gom dữ liệu bảng Orders
             order_tuple = (
