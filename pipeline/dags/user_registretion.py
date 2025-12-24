@@ -6,14 +6,14 @@ from airflow.sensors.python import PythonSensor
 
 
 def check_cities_exist_callable():
-    from ecommerce.models.city import City
-    city_instance = City()
-    exists = city_instance.has_cities()
+    from ecommerce.models.province import Province
+    province_instance = Province()
+    exists = province_instance.has_provinces()
     if exists:
-        print("Cities found. Proceeding...")
+        print("Provinces found. Proceeding...")
         return True
     else:
-        print("Waiting for cities to be created...")
+        print("Waiting for provinces to be created...")
         return False
 
 def user_info(num_users=1, execution_date_str=None):

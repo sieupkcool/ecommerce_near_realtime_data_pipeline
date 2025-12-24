@@ -4,16 +4,16 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 
 
+def generate_regions():
+    from ecommerce.models.region import Region
+    Instance = Region()
+    Instance.generate_vn_regions()
+
+
 def generate_provinces():
     from ecommerce.models.province import Province
     Instance = Province()
-    Instance.generate_us_states()
-
-
-def generate_cities():
-    from ecommerce.models.city import City
-    Instance = City()
-    Instance.generate_cities_for_provinces()
+    Instance.generate_provinces_for_regions()
 
 
 default_args = {
@@ -23,7 +23,7 @@ default_args = {
 }
 
 
-with DAG('ecommerce_generate_province_and_city',
+with DAG('ecommerce_generate_region_and_province',
          start_date=datetime(2025, 10, 30),
          schedule="@once",
          default_args=default_args, 
@@ -31,14 +31,14 @@ with DAG('ecommerce_generate_province_and_city',
         max_active_runs=1
 ) as dag:
 
+    generate_regions_info = PythonOperator(
+        task_id='generate_regions_info',
+        python_callable=generate_regions
+    )
+
     generate_provinces_info = PythonOperator(
         task_id='generate_provinces_info',
         python_callable=generate_provinces
     )
 
-    generate_cities_info = PythonOperator(
-        task_id='generate_cities_info',
-        python_callable=generate_cities
-    )
-
-generate_provinces_info >> generate_cities_info
+generate_regions_info >> generate_provinces_info

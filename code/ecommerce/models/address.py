@@ -34,24 +34,24 @@ class Address:
                 title = fake.random_element(["Nhà riêng", "Văn phòng"]) # Việt hóa title
 
                 # Lấy 1 thành phố ngẫu nhiên
-                self.cur.execute("SELECT id, province_id FROM cities ORDER BY RANDOM() LIMIT 1")
+                self.cur.execute("SELECT id, region_id FROM provinces ORDER BY RANDOM() LIMIT 1")
                 res = self.cur.fetchone()
                 
                 if not res:
-                    print("Lỗi: Bảng cities trống. Không thể tạo địa chỉ.")
+                    print("Lỗi: Bảng province trống. Không thể tạo địa chỉ.")
                     return
                 
-                city_id, province_id = res
+                province_id, region_id = res
 
                 street_address = fake.street_address()
                 # Faker vi_VN đôi khi không có secondary_address chuẩn, dùng building number thay thế cho an toàn
                 other_address_elements = f"Phòng {fake.building_number()}" 
                 full_address = f"{street_address}, {other_address_elements}"
 
-                address_data.append((title, user_id, province_id, city_id, full_address))
+                address_data.append((title, user_id, region_id, province_id, full_address))
 
             query = """
-                INSERT INTO addresses (title, user_id, province_id, city_id, full_address) 
+                INSERT INTO addresses (title, user_id, region_id, province_id, full_address) 
                 VALUES %s
                 ON CONFLICT DO NOTHING
             """

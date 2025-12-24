@@ -32,24 +32,23 @@ CREATE TABLE IF NOT EXISTS role_user
 );
 
 
-CREATE TABLE IF NOT EXISTS provinces
-(
-	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	province_name varchar(100) NOT NULL UNIQUE,
-	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
+CREATE TABLE IF NOT EXISTS regions (
+    id SERIAL PRIMARY KEY,
+    region_name VARCHAR(50) NOT NULL UNIQUE,  
+    created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')
 );
 
-CREATE TABLE IF NOT EXISTS cities
-(
-	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-	city_name varchar(100) NOT NULL,
-	province_id integer NOT NULL,
+CREATE TABLE IF NOT EXISTS provinces (
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    province_name VARCHAR(100) NOT NULL,
+    region_id INTEGER NOT NULL,
     latitude numeric,
     longitude numeric,
-	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
-
-    UNIQUE(city_name, province_id),
-	FOREIGN KEY (province_id) REFERENCES provinces(id)
+    created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
+	
+     UNIQUE(province_name, region_id),
+    
+    FOREIGN KEY (region_id) REFERENCES regions(id)
 );
 
 CREATE TABLE IF NOT EXISTS addresses
@@ -57,14 +56,14 @@ CREATE TABLE IF NOT EXISTS addresses
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 	title varchar(100) NOT NULL,
 	user_id integer NOT NULL,
+	region_id integer NOT NULL,
 	province_id integer NOT NULL,
-	city_id integer NOT NULL,
 	full_address varchar(255),
 	created_at timestamp(0) NOT NULL DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh'),
 	
 	FOREIGN KEY (user_id) REFERENCES users(id),
 	FOREIGN KEY (province_id) REFERENCES provinces(id),
-	FOREIGN KEY (city_id) REFERENCES cities(id)
+	FOREIGN KEY (region_id) REFERENCES regions(id)
 );
 
 CREATE TABLE IF NOT EXISTS categories

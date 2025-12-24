@@ -383,12 +383,49 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_role_user TO bronze.role_user
 FROM bronze.kafka_role_user
 WHERE id IS NOT NULL;
 
--- provinces table --------------------------------------------
+-- regions table --------------------------------------------
+
+CREATE TABLE IF NOT EXISTS bronze.regions
+(
+    id UInt32,
+    region_name LowCardinality(String)
+) 
+ENGINE = ReplacingMergeTree(id)
+ORDER BY (id);
+
+CREATE TABLE IF NOT EXISTS bronze.kafka_regions
+(
+    id Nullable(UInt32),
+    region_name Nullable(String)
+)
+ENGINE Kafka
+SETTINGS
+    kafka_broker_list = 'kafka-broker:19092',
+    kafka_topic_list = 'ecommerce_cdc.public.regions',
+    kafka_group_name = 'clickhouse_regions_consumer',
+    kafka_format = 'JSONEachRow',
+    kafka_num_consumers = 1,
+    kafka_skip_broken_messages = 10;
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_regions TO bronze.regions
+(
+    id UInt32,
+    region_name String
+) AS SELECT
+    id,
+    trim(lower(COALESCE(region_name, 'không rõ'))) AS region_name
+FROM bronze.kafka_regions
+WHERE id IS NOT NULL;
+
+-- provinces table -------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS bronze.provinces
 (
     id UInt32,
-    province_name LowCardinality(String)
+    province_name LowCardinality(String),
+    region_id UInt32,
+    latitude Nullable(Float32),
+    longitude Nullable(Float32)
 ) 
 ENGINE = ReplacingMergeTree(id)
 ORDER BY (id);
@@ -396,7 +433,10 @@ ORDER BY (id);
 CREATE TABLE IF NOT EXISTS bronze.kafka_provinces
 (
     id Nullable(UInt32),
-    province_name Nullable(String)
+    province_name Nullable(String),
+    region_id Nullable(UInt32),
+    latitude Nullable(Float32),
+    longitude Nullable(Float32)
 )
 ENGINE Kafka
 SETTINGS
@@ -410,57 +450,17 @@ SETTINGS
 CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_provinces TO bronze.provinces
 (
     id UInt32,
-    province_name String
-) AS SELECT
-    id,
-    trim(lower(COALESCE(province_name, 'không rõ'))) AS province_name
-FROM bronze.kafka_provinces
-WHERE id IS NOT NULL;
-
--- Cities table -------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS bronze.cities
-(
-    id UInt32,
-    city_name LowCardinality(String),
-    province_id UInt32,
-    latitude Nullable(Float32),
-    longitude Nullable(Float32)
-) 
-ENGINE = ReplacingMergeTree(id)
-ORDER BY (id);
-
-CREATE TABLE IF NOT EXISTS bronze.kafka_cities
-(
-    id Nullable(UInt32),
-    city_name Nullable(String),
-    province_id Nullable(UInt32),
-    latitude Nullable(Float32),
-    longitude Nullable(Float32)
-)
-ENGINE Kafka
-SETTINGS
-    kafka_broker_list = 'kafka-broker:19092',
-    kafka_topic_list = 'ecommerce_cdc.public.cities',
-    kafka_group_name = 'clickhouse_cities_consumer',
-    kafka_format = 'JSONEachRow',
-    kafka_num_consumers = 1,
-    kafka_skip_broken_messages = 10;
-
-CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_cities TO bronze.cities
-(
-    id UInt32,
-    city_name String,
-    province_id UInt32,
+    province_name String,
+    region_id UInt32,
     latitude Nullable(Float32),
     longitude Nullable(Float32)
 ) AS SELECT
     id,
-    trim(lower(COALESCE(city_name, 'không rõ'))) AS city_name,
-    province_id,
+    trim(lower(COALESCE(province_name, 'không rõ'))) AS province_name,
+    region_id,
     latitude,
     longitude
-FROM bronze.kafka_cities
+FROM bronze.kafka_provinces
 WHERE id IS NOT NULL;
 
 -- Addresses table ---------------------------------------------
@@ -470,8 +470,8 @@ CREATE TABLE IF NOT EXISTS bronze.addresses
     id UInt32,
     title LowCardinality(String),
     user_id UInt32,
-    province_id UInt32,
-    city_id UInt32
+    region_id UInt32,
+    province_id UInt32
 ) 
 ENGINE = ReplacingMergeTree(id) 
 ORDER BY (id);
@@ -481,8 +481,8 @@ CREATE TABLE IF NOT EXISTS bronze.kafka_addresses
     id Nullable(UInt32),
     title Nullable(String),
     user_id Nullable(UInt32),
-    province_id Nullable(UInt32),
-    city_id Nullable(UInt32)
+    region_id Nullable(UInt32),
+    province_id Nullable(UInt32)
 )
 ENGINE Kafka
 SETTINGS
@@ -498,14 +498,14 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_addresses TO bronze.addresses
     id UInt32,
     title String,
     user_id UInt32,
-    province_id UInt32,
-    city_id UInt32
+    region_id UInt32, 
+    province_id UInt32 
 ) AS SELECT
     id,
     trim(lower(COALESCE(title, 'không rõ'))) AS title,
     user_id,
-    province_id,
-    city_id
+    region_id,
+    province_id
 FROM bronze.kafka_addresses
 WHERE id IS NOT NULL;
 

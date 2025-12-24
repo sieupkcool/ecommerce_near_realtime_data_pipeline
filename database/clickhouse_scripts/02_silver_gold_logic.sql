@@ -4,25 +4,29 @@
 
 CREATE DATABASE IF NOT EXISTS silver;
 
--- 1. SILVER LOCATIONS (Gộp City + Province) -----------------------
+-- 1. SILVER LOCATIONS (Gộp Province + Region) -----------------------
 CREATE TABLE IF NOT EXISTS silver.locations
 (
-    city_id UInt32,
-    city_name String,
     province_id UInt32,
     province_name String,
+    region_id UInt32,
+    region_name String,
+    latitude Nullable(Float32),
+    longitude Nullable(Float32),
     updated_at DateTime DEFAULT now()
-) ENGINE = ReplacingMergeTree(updated_at) ORDER BY city_id;
+) ENGINE = ReplacingMergeTree(updated_at) ORDER BY province_id;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS silver.mv_bronze_to_silver_locations TO silver.locations AS
 SELECT
-    c.id AS city_id,
-    c.city_name,
     p.id AS province_id,
     p.province_name,
+    r.id AS region_id,
+    r.region_name,
+    p.latitude,
+    p.longitude,
     now() AS updated_at
-FROM bronze.cities AS c
-INNER JOIN bronze.provinces AS p ON c.province_id = p.id;
+FROM bronze.provinces AS p
+INNER JOIN bronze.regions AS r ON p.region_id = r.id;
 
 -- 2. SILVER CAMPAIGNS (Làm sạch) ----------------------------------
 CREATE TABLE IF NOT EXISTS silver.campaigns
@@ -101,7 +105,7 @@ CREATE TABLE IF NOT EXISTS silver.orders
     order_id UInt32,
     user_id UInt32,
     
-    city_id UInt32,       -- Đã lookup
+    province_id UInt32,       -- Đã lookup
     campaign_key UInt32,  -- Đã lookup
     
     order_status_id UInt32,
@@ -121,7 +125,7 @@ SELECT
     o.id AS order_id,
     o.user_id,
     
-    ifNull(a.city_id, 0) AS city_id,
+    ifNull(a.province_id, 0) AS province_id,
     ifNull(d.adscampaign_id, 0) AS campaign_key,
     
     ifNull(o.order_status_id, 0) AS order_status_id,
@@ -196,8 +200,8 @@ CREATE DATABASE IF NOT EXISTS gold;
 CREATE TABLE IF NOT EXISTS gold.dim_locations
 (
     location_key UInt32,
-    city_name String,
     province_name String,
+    region_name String,
     updated_at DateTime
 ) ENGINE = ReplacingMergeTree(updated_at) ORDER BY location_key;
 
@@ -205,7 +209,7 @@ CREATE TABLE IF NOT EXISTS gold.dim_locations
 INSERT INTO gold.dim_locations VALUES (0, 'Unknown', 'Unknown', now());
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS gold.mv_silver_to_dim_locations TO gold.dim_locations AS
-SELECT city_id AS location_key, city_name, province_name, updated_at FROM silver.locations;
+SELECT province_id AS location_key, province_name, region_name, updated_at FROM silver.locations;
 
 -- Dim Products
 CREATE TABLE IF NOT EXISTS gold.dim_products
@@ -303,7 +307,7 @@ DROP VIEW IF EXISTS gold.mv_fact_overview;
 CREATE MATERIALIZED VIEW IF NOT EXISTS gold.mv_fact_overview TO gold.FACT_ORDER_OVERVIEW AS
 SELECT
     toYYYYMMDD(o.created_at) AS date_key,
-    o.city_id AS location_key,
+    o.province_id AS location_key,
     o.campaign_key,
     o.order_status_id,
     --  JOIN để lấy tên từ Bronze

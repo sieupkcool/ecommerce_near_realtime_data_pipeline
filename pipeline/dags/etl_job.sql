@@ -5,7 +5,7 @@ INSERT INTO gold.FACT_SALES_PRODUCT
 )
 SELECT
     toYYYYMMDD(o.created_at) AS date_key,
-    o.city_id AS location_key,
+    o.province_id AS location_key,
     o.campaign_key AS campaign_key,
     i.product_id AS product_key,
 
