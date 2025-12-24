@@ -129,22 +129,29 @@ class Product:
                 
                 name_style = random.choice([1, 2, 3])
                 if name_style == 1:
-                    product_name = f"{prefix} {base} {suffix}"
+                    product_name = f"{base} {prefix} {suffix}"
                 elif name_style == 2:
                     product_name = f"{base} {suffix}" 
                 else:
-                    product_name = f"{prefix} {base}" 
+                    product_name = f"{base} {prefix}"
 
                 min_p, max_p = recipe["price"]
                 product_price = round(random.uniform(min_p, max_p), 2)
                 
                 # 1. Kiểm tra các từ khóa cao cấp (Tăng giá 50%)
-                premium_keywords = ["Pro", "Ultra", "Luxury", "Elite", "Max", "Sang trọng", "Cao cấp", "Vàng", "Phiên bản giới hạn"]
+                premium_keywords = [
+                    "Pro", "Ultra", "Luxury", "Elite", "Max", 
+                    "Sang trọng", "Cao cấp", "Vàng", "Phiên bản giới hạn", 
+                    "Chuyên nghiệp", "Thượng hạng", "Đẳng cấp"
+                ]
                 if any(x in product_name for x in premium_keywords):
                     product_price = round(product_price * 1.5, -3) # Làm tròn đến hàng nghìn
 
                 # 2. Kiểm tra các từ khóa giá rẻ (Giảm giá 30%)
-                budget_keywords = ["Lite", "Mini", "Basic", "Cơ bản", "Nhỏ gọn", "Thường ngày"]
+                budget_keywords = [
+                    "Lite", "Mini", "Basic", "Cơ bản", "Nhỏ gọn", 
+                    "Thường ngày", "Phổ thông", "Giá rẻ", "Tiết kiệm"
+                ]
                 if any(x in product_name for x in budget_keywords):
                     product_price = round(product_price * 0.7, -3)
 

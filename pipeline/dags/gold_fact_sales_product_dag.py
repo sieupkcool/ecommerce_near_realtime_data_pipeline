@@ -18,10 +18,12 @@ SQL_FILE_PATH = os.path.join(os.path.dirname(__file__), "etl_job.sql")
 def run_etl_job(**context):
     # --- 1. IMPORT THƯ VIỆN BÊN TRONG HÀM (Tối ưu RAM) ---
     from clickhouse_driver import Client
+
+    vn_tz = pendulum.timezone("Asia/Ho_Chi_Minh")
     
     # --- 2. LẤY THAM SỐ THỜI GIAN ---
-    start_dt = context["data_interval_start"]
-    end_dt = context["data_interval_end"]
+    start_dt = context["data_interval_start"].in_timezone(vn_tz)
+    end_dt = context["data_interval_end"].in_timezone(vn_tz)
     
     # Xử lý trường hợp chạy tay (Manual Trigger)
     if start_dt == end_dt:

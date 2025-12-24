@@ -52,7 +52,6 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_transactions TO bronze.transact
     toDecimal64OrNull(amount, 2) AS amount,
     trim(lower(COALESCE(status, 'không rõ'))) AS status,
     
-    -- Debezium gửi Int64 (microseconds), phải chia 1000
     COALESCE(fromUnixTimestamp64Milli(created_at), now()) AS created_at,
     now() as ttl
 FROM bronze.kafka_transactions
@@ -145,7 +144,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orders TO bronze.orders
     COALESCE(order_status_id, 0) AS order_status_id, -- Gán 0 nếu status là null
     shipping_method_id,
     shipping_status_id,
-    fromUnixTimestamp64Milli(created_at)  AS created_at
+    fromUnixTimestamp64Milli(created_at)  - INTERVAL 7 HOUR AS created_at
 FROM bronze.kafka_orders
 WHERE id IS NOT NULL;
 
