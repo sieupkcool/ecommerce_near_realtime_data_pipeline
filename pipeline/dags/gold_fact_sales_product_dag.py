@@ -50,7 +50,7 @@ def run_etl_job(**context):
     )
     
     # In ra câu lệnh SQL để debug (nếu cần)
-    print(f"Executing SQL:\n{final_sql[:500]} ... (đã cắt bớt)")
+    print(f"Executing SQL:\n{final_sql[:500]} ...")
 
     # --- 5. THỰC THI TRÊN CLICKHOUSE ---
     client = Client(**CLICKHOUSE_CONFIG)

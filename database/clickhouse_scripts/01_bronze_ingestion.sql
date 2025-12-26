@@ -413,7 +413,14 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_regions TO bronze.regions
     region_name String
 ) AS SELECT
     id,
-    trim(lower(COALESCE(region_name, 'không rõ'))) AS region_name
+    trim(
+        arrayStringConcat(
+            arrayMap(x -> concat(upper(substring(x, 1, 1)), lower(substring(x, 2))), 
+                     splitByChar(' ', trim(COALESCE(region_name, 'không rõ')))
+            ), 
+            ' '
+        )
+    ) AS region_name
 FROM bronze.kafka_regions
 WHERE id IS NOT NULL;
 
@@ -456,7 +463,14 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_provinces TO bronze.provinces
     longitude Nullable(Float32)
 ) AS SELECT
     id,
-    trim(lower(COALESCE(province_name, 'không rõ'))) AS province_name,
+    trim(
+        arrayStringConcat(
+            arrayMap(x -> concat(upper(substring(x, 1, 1)), lower(substring(x, 2))), 
+                     splitByChar(' ', trim(COALESCE(province_name, 'không rõ')))
+            ), 
+            ' '
+        )
+    ) AS province_name,
     region_id,
     latitude,
     longitude
