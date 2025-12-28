@@ -908,7 +908,7 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS bronze.mv_orderdetails TO bronze.orderdet
     toDecimal64OrNull(product_price, 2) AS product_price,
     toDecimal64OrNull(product_tax, 2) AS product_tax,
     toDecimal64OrNull(subtotal_amount, 2) AS subtotal_amount,
-    fromUnixTimestamp64Milli(created_at)  AS created_at
+    fromUnixTimestamp64Milli(created_at) - INTERVAL 7 HOUR AS created_at
 FROM bronze.kafka_orderdetails
 -- Lọc dữ liệu rác
 WHERE

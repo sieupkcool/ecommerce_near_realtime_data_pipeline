@@ -20,7 +20,7 @@ def check_customer_user_exists():
         return False
 
 @dag(
-    dag_id='ecommerce_generate_order_process',
+    dag_id='ecommerce_generate_order_process_v2',
     start_date=datetime(2025, 10, 30),
     schedule='@daily',
     catchup=True,

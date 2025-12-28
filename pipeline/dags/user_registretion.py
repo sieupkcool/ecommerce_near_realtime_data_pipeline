@@ -45,7 +45,7 @@ default_args = {
     'retry_delay': timedelta(minutes=5)
 }
 
-with DAG('ecommerce_user_registration',
+with DAG('ecommerce_user_registration_v2',
         start_date=datetime(2025, 10, 30),
         schedule='@daily',
         default_args=default_args, 
@@ -69,7 +69,7 @@ with DAG('ecommerce_user_registration',
     generate_user_info = PythonOperator(
         task_id='generate_user_info',
         python_callable=user_info,
-        op_args=[100, '{{ ds }}'] 
+        op_args=[50, '{{ ds }}'] 
     )
 
     assign_role_to_user = PythonOperator(

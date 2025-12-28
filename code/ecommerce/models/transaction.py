@@ -3,6 +3,7 @@ import random
 import psycopg2
 from ecommerce.models.order import OrderRegistration
 from ecommerce.config.database import db_config
+import pendulum
 
 from psycopg2.extras import execute_values
 
@@ -93,9 +94,10 @@ class Transaction(object):
             status_str = 'true' if is_success else 'false'
             transaction_type = 'payment'
             description = f'Fake bulk transaction cho đơn hàng #{order_id}'
+            created_at = pendulum.now("Asia/Ho_Chi_Minh").naive()
             
             transactions_to_insert.append((
-                order_id, transaction_type, amount, description, status_str
+                order_id, transaction_type, amount, description, status_str, created_at
             ))
             
             if is_success:
@@ -113,7 +115,7 @@ class Transaction(object):
             self.cur.execute("BEGIN;")
             
             insert_query = """
-                INSERT INTO transactions (order_id, transaction_type, amount, description, status)
+                INSERT INTO transactions (order_id, transaction_type, amount, description, status, created_at)
                 VALUES %s
             """
             execute_values(self.cur, insert_query, transactions_to_insert)

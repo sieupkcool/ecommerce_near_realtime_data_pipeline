@@ -33,8 +33,9 @@ LEFT JOIN silver.products AS p ON i.product_id = p.product_id
 
 WHERE 
     o.order_status_id = 4 
-    AND o.created_at >= '{start_ts}' 
-    AND o.created_at < '{end_ts}'
+    -- SỬA ĐỔI QUAN TRỌNG: Ép kiểu về múi giờ Việt Nam
+    AND o.created_at >= toDateTime('{start_ts}', 'Asia/Ho_Chi_Minh')
+    AND o.created_at <  toDateTime('{end_ts}', 'Asia/Ho_Chi_Minh')
 
 GROUP BY 
     date_key, location_key, campaign_key, product_key;

@@ -19,7 +19,7 @@ def test_single_order():
         print("--- [START] Bắt đầu sinh 1 đơn hàng test ---")
         order_model = OrderRegistration()
         
-        order_ids = order_model.generate_bulk_orders(num_orders=1)
+        order_ids = order_model.generate_delivered_orders(num_orders=1)
         
         if not order_ids:
             raise AirflowException("Lỗi: Không sinh được đơn hàng.")

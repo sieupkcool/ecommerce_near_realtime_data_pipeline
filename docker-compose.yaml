@@ -307,47 +307,47 @@ services:
       retries: 5
       start_period: 120s
 
-  postgres-metabase:
-    image: postgres:16-alpine
-    container_name: postgres-metabase
-    hostname: postgres-metabase
-    environment:
-      POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: metabase
-      POSTGRES_DB: metabase
-    volumes:
-      - metabase-postgres-volume:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "metabase"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - services
-    restart: unless-stopped
+  # postgres-metabase:
+  #   image: postgres:16-alpine
+  #   container_name: postgres-metabase
+  #   hostname: postgres-metabase
+  #   environment:
+  #     POSTGRES_USER: metabase
+  #     POSTGRES_PASSWORD: metabase
+  #     POSTGRES_DB: metabase
+  #   volumes:
+  #     - metabase-postgres-volume:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "metabase"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - services
+  #   restart: unless-stopped
 
-  metabase:
-    image: metabase/metabase:v0.57.5.x
-    container_name: metabase
-    hostname: metabase
-    ports:
-      - "3000:3000"
-    environment:
-      # Metabase app DB (Postgres)
-      MB_DB_TYPE: postgres
-      MB_DB_HOST: postgres-metabase
-      MB_DB_PORT: 5432
-      MB_DB_DBNAME: metabase
-      MB_DB_USER: metabase
-      MB_DB_PASS: metabase
-    depends_on:
-      postgres-metabase:
-        condition: service_healthy
-      clickhouse:
-        condition: service_healthy
-    networks:
-      - services
-    restart: unless-stopped
+  # metabase:
+  #   image: metabase/metabase:v0.57.5.x
+  #   container_name: metabase
+  #   hostname: metabase
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     # Metabase app DB (Postgres)
+  #     MB_DB_TYPE: postgres
+  #     MB_DB_HOST: postgres-metabase
+  #     MB_DB_PORT: 5432
+  #     MB_DB_DBNAME: metabase
+  #     MB_DB_USER: metabase
+  #     MB_DB_PASS: metabase
+  #   depends_on:
+  #     postgres-metabase:
+  #       condition: service_healthy
+  #     clickhouse:
+  #       condition: service_healthy
+  #   networks:
+  #     - services
+  #   restart: unless-stopped
 
 volumes:
   airflow-postgres-volume:
