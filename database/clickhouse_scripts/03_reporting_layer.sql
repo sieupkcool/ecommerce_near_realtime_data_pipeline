@@ -78,7 +78,7 @@ CREATE VIEW reporting.view_overview_users AS
 SELECT
     d.full_date AS registration_date,
     d.month AS month,
-    count() AS new_user_count
+    sum(f.user_amount) AS new_user_count
 FROM gold.FACT_USER_REGISTRATION AS f
 LEFT JOIN gold.dim_date AS d ON f.date_key = d.date_key
 GROUP BY registration_date, month;

@@ -4,7 +4,7 @@ INSERT INTO gold.FACT_SALES_PRODUCT
     quantity, gmv, total_cost, discount_val, net_revenue, order_count
 )
 SELECT
-    toYYYYMMDD(o.created_at) AS date_key,
+    toYYYYMMDD(toTimeZone(o.created_at, 'Asia/Ho_Chi_Minh')) AS date_key,
     o.province_id AS location_key,
     o.campaign_key AS campaign_key,
     i.product_id AS product_key,
@@ -27,13 +27,13 @@ SELECT
 
     uniq(o.order_id) AS order_count
 
-FROM silver.order_items AS i
-INNER JOIN silver.orders AS o ON i.order_id = o.order_id
+FROM silver.order_items AS i FINAL
+INNER JOIN silver.orders AS o FINAL ON i.order_id = o.order_id
 LEFT JOIN silver.products AS p ON i.product_id = p.product_id
 
 WHERE 
     o.order_status_id = 4 
-    -- SỬA ĐỔI QUAN TRỌNG: Ép kiểu về múi giờ Việt Nam
+    
     AND o.created_at >= toDateTime('{start_ts}', 'Asia/Ho_Chi_Minh')
     AND o.created_at <  toDateTime('{end_ts}', 'Asia/Ho_Chi_Minh')
 

@@ -288,39 +288,41 @@ SELECT toYYYYMMDD(registration_date) AS date_key, count() AS user_amount
 FROM silver.users GROUP BY date_key;
 
 -- FACT_ORDER_OVERVIEW
-DROP TABLE IF EXISTS gold.FACT_ORDER_OVERVIEW;
-CREATE TABLE IF NOT EXISTS gold.FACT_ORDER_OVERVIEW
-(
-    date_key UInt32,
-    location_key UInt32,
-    campaign_key UInt32,
-    order_status_id UInt32,  
-    payment_method LowCardinality(String), 
-    shipping_method LowCardinality(String),
-
-    order_count SimpleAggregateFunction(sum, UInt64),
-    total_gmv SimpleAggregateFunction(sum, Decimal(38,2))
-) ENGINE = SummingMergeTree()
-ORDER BY (date_key, location_key, campaign_key, order_status_id, payment_method, shipping_method);
-
 DROP VIEW IF EXISTS gold.mv_fact_overview;
-CREATE MATERIALIZED VIEW IF NOT EXISTS gold.mv_fact_overview TO gold.FACT_ORDER_OVERVIEW AS
+DROP TABLE IF EXISTS gold.FACT_ORDER_OVERVIEW;
+
+-- 2. Tạo View Logic (Thay thế cho bảng Fact cứng)
+CREATE VIEW gold.FACT_ORDER_OVERVIEW AS
 SELECT
-    toYYYYMMDD(o.created_at) AS date_key,
+    -- Fix lỗi Timezone: Chuyển sang giờ VN trước khi cắt ngày
+    toYYYYMMDD(toTimeZone(o.created_at, 'Asia/Ho_Chi_Minh')) AS date_key,
+    
     o.province_id AS location_key,
     o.campaign_key,
     o.order_status_id,
-    --  JOIN để lấy tên từ Bronze
-    -- Nếu không tìm thấy ID thì để mặc định là 'Unknown'
+    
+    -- Lookup tên (Xử lý Null/Unknown)
     coalesce(pm.payment_method_name, 'Unknown') AS payment_method,
     coalesce(sm.shipping_method_name, 'Unknown') AS shipping_method,
+
+    -- TÍNH TOÁN REAL-TIME (Aggregate)
+    -- Logic: Đếm số dòng đã được gộp (FINAL) -> Ra số đơn chuẩn
     count() AS order_count,
+    
+    -- Logic: Cộng tổng tiền từ các dòng đã gộp -> Ra doanh thu chuẩn
     CAST(sum(o.total_amount) AS Decimal(38,2)) AS total_gmv
 
-FROM silver.orders AS o
+FROM silver.orders AS o FINAL -- <--- QUAN TRỌNG: Loại bỏ trùng lặp lịch sử
 LEFT JOIN bronze.paymentmethods AS pm ON o.payment_method_id = pm.id
 LEFT JOIN bronze.shippingmethods AS sm ON o.shipping_method_id = sm.id
-GROUP BY date_key, location_key, campaign_key, order_status_id, payment_method, shipping_method;
+
+GROUP BY 
+    date_key, 
+    location_key, 
+    campaign_key, 
+    order_status_id, 
+    payment_method, 
+    shipping_method;
 
 -- 3. FACT TABLES (Scheduled Job - KHÔNG CÓ MV Ở ĐÂY) ---------------
 
